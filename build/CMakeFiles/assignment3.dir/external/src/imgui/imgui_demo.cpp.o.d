@@ -1,7 +1,7 @@
 CMakeFiles/assignment3.dir/external/src/imgui/imgui_demo.cpp.o: \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imgui_demo.cpp \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imgui.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imconfig.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imgui_demo.cpp \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imgui.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imconfig.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/float.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \

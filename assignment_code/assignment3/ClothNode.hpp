@@ -26,7 +26,7 @@ class ClothNode : public SceneNode {
             
             for (int i = 0; i < n; i++) { // add positions of spheres
                 for (int j = 0; j < n; j++) {
-                    positions.push_back(glm::vec3(1.5f+0.1*j+0.01*i, 1.5f-0.01*i, 0.f));
+                    positions.push_back(glm::vec3(0.1*j+0.01*i, 1.5f-0.01*i, 0.f)); // y coord moves position up and down
                     velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
                     if (i == 0) { // if we are at first row of cloth
                         system.AddMass(0.1, 1);

@@ -1,7 +1,7 @@
 CMakeFiles/assignment3.dir/gloo/gl_wrapper/BindGuard.cpp.o: \
-  /Users/gracejiang/documents/6.4400/assignment3/gloo/gl_wrapper/BindGuard.cpp \
-  /Users/gracejiang/documents/6.4400/assignment3/gloo/gl_wrapper/BindGuard.hpp \
-  /Users/gracejiang/documents/6.4400/assignment3/gloo/gl_wrapper/IBindable.hpp \
+  /Users/gracejiang/6.4400-final-project/gloo/gl_wrapper/BindGuard.cpp \
+  /Users/gracejiang/6.4400-final-project/gloo/gl_wrapper/BindGuard.hpp \
+  /Users/gracejiang/6.4400-final-project/gloo/gl_wrapper/IBindable.hpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/type_traits \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \

@@ -5,7 +5,7 @@
 # compile CXX with /Library/Developer/CommandLineTools/usr/bin/c++
 C_DEFINES = 
 
-C_INCLUDES = -I/Users/gracejiang/documents/6.4400/assignment3/external/src/glad/include -I/Users/gracejiang/documents/6.4400/assignment3/external/src/imgui -I/Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/examples -I/Users/gracejiang/documents/6.4400/assignment3/external/src/stb -I/Users/gracejiang/documents/6.4400/assignment3 -I/Users/gracejiang/documents/6.4400/assignment3/assignment_code/assignment3 -I/Users/gracejiang/documents/6.4400/assignment3/assignment_code/common -I/Users/gracejiang/documents/6.4400/assignment3/external/src/glfw-3.3.2/include -isystem /Users/gracejiang/documents/6.4400/assignment3/external/src/glm-0.9.9.8
+C_INCLUDES = -I/Users/gracejiang/6.4400-final-project/external/src/glad/include -I/Users/gracejiang/6.4400-final-project/external/src/imgui -I/Users/gracejiang/6.4400-final-project/external/src/imgui/examples -I/Users/gracejiang/6.4400-final-project/external/src/stb -I/Users/gracejiang/6.4400-final-project -I/Users/gracejiang/6.4400-final-project/assignment_code/assignment3 -I/Users/gracejiang/6.4400-final-project/assignment_code/common -I/Users/gracejiang/6.4400-final-project/external/src/glfw-3.3.2/include -isystem /Users/gracejiang/6.4400-final-project/external/src/glm-0.9.9.8
 
 C_FLAGSarm64 = -O3 -DNDEBUG -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk -Wall
 
@@ -13,7 +13,7 @@ C_FLAGS = -O3 -DNDEBUG -arch arm64 -isysroot /Library/Developer/CommandLineTools
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/Users/gracejiang/documents/6.4400/assignment3/external/src/glad/include -I/Users/gracejiang/documents/6.4400/assignment3/external/src/imgui -I/Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/examples -I/Users/gracejiang/documents/6.4400/assignment3/external/src/stb -I/Users/gracejiang/documents/6.4400/assignment3 -I/Users/gracejiang/documents/6.4400/assignment3/assignment_code/assignment3 -I/Users/gracejiang/documents/6.4400/assignment3/assignment_code/common -I/Users/gracejiang/documents/6.4400/assignment3/external/src/glfw-3.3.2/include -isystem /Users/gracejiang/documents/6.4400/assignment3/external/src/glm-0.9.9.8
+CXX_INCLUDES = -I/Users/gracejiang/6.4400-final-project/external/src/glad/include -I/Users/gracejiang/6.4400-final-project/external/src/imgui -I/Users/gracejiang/6.4400-final-project/external/src/imgui/examples -I/Users/gracejiang/6.4400-final-project/external/src/stb -I/Users/gracejiang/6.4400-final-project -I/Users/gracejiang/6.4400-final-project/assignment_code/assignment3 -I/Users/gracejiang/6.4400-final-project/assignment_code/common -I/Users/gracejiang/6.4400-final-project/external/src/glfw-3.3.2/include -isystem /Users/gracejiang/6.4400-final-project/external/src/glm-0.9.9.8
 
 CXX_FLAGSarm64 =  -DIMGUI_IMPL_OPENGL_LOADER_GLAD -O3 -DNDEBUG -O3 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk -Wall -std=gnu++11
 

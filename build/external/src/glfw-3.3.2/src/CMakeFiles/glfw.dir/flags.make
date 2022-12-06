@@ -4,7 +4,7 @@
 # compile C with /Library/Developer/CommandLineTools/usr/bin/cc
 C_DEFINES = -D_GLFW_USE_CONFIG_H
 
-C_INCLUDES = -I/Users/gracejiang/documents/6.4400/assignment3/external/src/glfw-3.3.2/include -I/Users/gracejiang/documents/6.4400/assignment3/external/src/glfw-3.3.2/src -I/Users/gracejiang/documents/6.4400/assignment3/build/external/src/glfw-3.3.2/src
+C_INCLUDES = -I/Users/gracejiang/6.4400-final-project/external/src/glfw-3.3.2/include -I/Users/gracejiang/6.4400-final-project/external/src/glfw-3.3.2/src -I/Users/gracejiang/6.4400-final-project/build/external/src/glfw-3.3.2/src
 
 C_FLAGSarm64 = -O3 -DNDEBUG -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk -fPIC -Wall -std=gnu99
 

@@ -1,8 +1,8 @@
 CMakeFiles/assignment3.dir/gloo/gl_wrapper/BindableBuffer.cpp.o: \
-  /Users/gracejiang/documents/6.4400/assignment3/gloo/gl_wrapper/BindableBuffer.cpp \
-  /Users/gracejiang/documents/6.4400/assignment3/gloo/gl_wrapper/BindableBuffer.hpp \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/glad/include/glad/glad.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/glad/include/KHR/khrplatform.h \
+  /Users/gracejiang/6.4400-final-project/gloo/gl_wrapper/BindableBuffer.cpp \
+  /Users/gracejiang/6.4400-final-project/gloo/gl_wrapper/BindableBuffer.hpp \
+  /Users/gracejiang/6.4400-final-project/external/src/glad/include/glad/glad.h \
+  /Users/gracejiang/6.4400-final-project/external/src/glad/include/KHR/khrplatform.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/stdint.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \
@@ -34,7 +34,7 @@ CMakeFiles/assignment3.dir/gloo/gl_wrapper/BindableBuffer.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/_types/_uintptr_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/_types/_intmax_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/_types/_uintmax_t.h \
-  /Users/gracejiang/documents/6.4400/assignment3/gloo/gl_wrapper/IBindable.hpp \
+  /Users/gracejiang/6.4400-final-project/gloo/gl_wrapper/IBindable.hpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/type_traits \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/cstddef \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/version \
@@ -44,7 +44,7 @@ CMakeFiles/assignment3.dir/gloo/gl_wrapper/BindableBuffer.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__utility/forward.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__utility/move.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__undef_macros \
-  /Users/gracejiang/documents/6.4400/assignment3/gloo/utils.hpp \
+  /Users/gracejiang/6.4400-final-project/gloo/utils.hpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/cmath \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/math.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/math.h \

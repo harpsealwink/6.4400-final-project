@@ -1,5 +1,5 @@
 CMakeFiles/assignment3.dir/external/src/glad/src/glad.c.o: \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/glad/src/glad.c \
+  /Users/gracejiang/6.4400-final-project/external/src/glad/src/glad.c \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/stdio.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/_stdio.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/cdefs.h \
@@ -80,7 +80,7 @@ CMakeFiles/assignment3.dir/external/src/glad/src/glad.c.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/strings.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/secure/_strings.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/secure/_string.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/glad/include/glad/glad.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/glad/include/KHR/khrplatform.h \
+  /Users/gracejiang/6.4400-final-project/external/src/glad/include/glad/glad.h \
+  /Users/gracejiang/6.4400-final-project/external/src/glad/include/KHR/khrplatform.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/dlfcn.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/14.0.0/include/stdbool.h

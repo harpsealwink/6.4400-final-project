@@ -1,7 +1,7 @@
 CMakeFiles/assignment3.dir/external/src/imgui/examples/imgui_impl_glfw.cpp.o: \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/examples/imgui_impl_glfw.cpp \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imgui.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imconfig.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/examples/imgui_impl_glfw.cpp \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imgui.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imconfig.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/float.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \
@@ -87,8 +87,8 @@ CMakeFiles/assignment3.dir/external/src/imgui/examples/imgui_impl_glfw.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/malloc/_malloc.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/_types/_dev_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/_types/_mode_t.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/examples/imgui_impl_glfw.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/glfw-3.3.2/include/GLFW/glfw3.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/examples/imgui_impl_glfw.h \
+  /Users/gracejiang/6.4400-final-project/external/src/glfw-3.3.2/include/GLFW/glfw3.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gltypes.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/OpenGL.framework/Headers/OpenGLAvailability.h \

@@ -1,7 +1,7 @@
 CMakeFiles/assignment3.dir/external/src/imgui/imgui_widgets.cpp.o: \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imgui_widgets.cpp \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imgui.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imconfig.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imgui_widgets.cpp \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imgui.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imconfig.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/float.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \
@@ -87,7 +87,7 @@ CMakeFiles/assignment3.dir/external/src/imgui/imgui_widgets.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/malloc/_malloc.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/_types/_dev_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/_types/_mode_t.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imgui_internal.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imgui_internal.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/stdio.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/stdio.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/_stdio.h \
@@ -111,7 +111,7 @@ CMakeFiles/assignment3.dir/external/src/imgui/imgui_widgets.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/arm/limits.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/arm/_limits.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/syslimits.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imstb_textedit.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imstb_textedit.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/ctype.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/ctype.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/_ctype.h \

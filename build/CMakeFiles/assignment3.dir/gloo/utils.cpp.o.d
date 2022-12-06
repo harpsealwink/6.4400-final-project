@@ -1,6 +1,6 @@
 CMakeFiles/assignment3.dir/gloo/utils.cpp.o: \
-  /Users/gracejiang/documents/6.4400/assignment3/gloo/utils.cpp \
-  /Users/gracejiang/documents/6.4400/assignment3/gloo/utils.hpp \
+  /Users/gracejiang/6.4400-final-project/gloo/utils.cpp \
+  /Users/gracejiang/6.4400-final-project/gloo/utils.hpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/cmath \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \
@@ -421,8 +421,8 @@ CMakeFiles/assignment3.dir/gloo/utils.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/_types/_fsfilcnt_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/_types/_nl_item.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__bsd_locale_defaults.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/glad/include/glad/glad.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/glad/include/KHR/khrplatform.h \
+  /Users/gracejiang/6.4400-final-project/external/src/glad/include/glad/glad.h \
+  /Users/gracejiang/6.4400-final-project/external/src/glad/include/KHR/khrplatform.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/iostream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/fstream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/filesystem \

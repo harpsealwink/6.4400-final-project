@@ -1,7 +1,7 @@
 CMakeFiles/assignment3.dir/external/src/imgui/examples/imgui_impl_opengl3.cpp.o: \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/examples/imgui_impl_opengl3.cpp \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imgui.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/imconfig.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/examples/imgui_impl_opengl3.cpp \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imgui.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/imconfig.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/float.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \
@@ -87,7 +87,7 @@ CMakeFiles/assignment3.dir/external/src/imgui/examples/imgui_impl_opengl3.cpp.o:
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/malloc/_malloc.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/_types/_dev_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/_types/_mode_t.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/imgui/examples/imgui_impl_opengl3.h \
+  /Users/gracejiang/6.4400-final-project/external/src/imgui/examples/imgui_impl_opengl3.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/stdio.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/stdio.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/_stdio.h \
@@ -95,5 +95,5 @@ CMakeFiles/assignment3.dir/external/src/imgui/examples/imgui_impl_opengl3.cpp.o:
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/stdio.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/_ctermid.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/_types/_off_t.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/glad/include/glad/glad.h \
-  /Users/gracejiang/documents/6.4400/assignment3/external/src/glad/include/KHR/khrplatform.h
+  /Users/gracejiang/6.4400-final-project/external/src/glad/include/glad/glad.h \
+  /Users/gracejiang/6.4400-final-project/external/src/glad/include/KHR/khrplatform.h
