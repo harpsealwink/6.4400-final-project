@@ -14,8 +14,6 @@
 #include "gloo/cameras/ArcBallCameraNode.hpp"
 #include "gloo/debug/AxisNode.hpp"
 #include "gloo/debug/PrimitiveFactory.hpp"
-#include "CircleNode.hpp"
-#include "PendulumNode.hpp"
 #include "ClothNode.hpp"
 
 
