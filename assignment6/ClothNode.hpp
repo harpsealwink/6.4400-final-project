@@ -89,7 +89,7 @@ namespace GLOO {
             addTriangle(9, 8, 1);
 
             // add center node (connected with springs to all other nodes)
-            positions.push_back(glm::vec3(0.f, 0.f, 0.f));
+            ico_positions.push_back(glm::vec3(0.f, 0.f, 0.f));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
 
@@ -97,58 +97,33 @@ namespace GLOO {
             integrator = IntegratorFactory::CreateIntegrator<PendulumSystem, ParticleState>(integrator_type);
             step_size = integration_step;
 
-            for (int i = 0; i < triangles.size(); i++) { // add structural springs
-                auto line_node = make_unique<SceneNode>();
-                line_node->CreateComponent<ShadingComponent>(line_shader_);
-                auto line_ = std::make_shared<VertexObject>();
-                line_node->CreateComponent<MaterialComponent>(material);
-                auto tri_positions = make_unique<PositionArray>();
-                auto indices = make_unique<IndexArray>();
-                indices->push_back(0);
-                indices->push_back(1);
-                indices->push_back(1);
-                indices->push_back(2);
-                indices->push_back(2);
-                indices->push_back(0);
-
-                tri_positions->push_back(state.positions[triangles[i][0]]); 
-                tri_positions->push_back(state.positions[triangles[i][1]]);
-                tri_positions->push_back(state.positions[triangles[i][2]]);
-
-                line_->UpdatePositions(std::move(tri_positions));
-                line_->UpdateIndices(std::move(indices));
-                auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line_);
-                rc_curve.SetDrawMode(DrawMode::Lines);
-
-                // line_ptrs.push_back(line_);
-                // AddChild(std::move(line_node));
-                // system.AddSpring(n*i+j, n*(i+1)+j, l, k);
-            }
-
-            for (int i = 0; i < state.positions.size()-1; i++) { // add springs from center node to all other nodes
+            for (int i = 0; i < triangles.size(); i++) { // add surface springs
                 auto line_node = make_unique<SceneNode>();
                 line_node->CreateComponent<ShadingComponent>(line_shader_);
                 auto line_ = std::make_shared<VertexObject>();
                 line_node->CreateComponent<MaterialComponent>(material);
                 auto positions = make_unique<PositionArray>();
                 auto indices = make_unique<IndexArray>();
-
                 indices->push_back(0);
                 indices->push_back(1);
-                positions->push_back(state.positions[state.positions.size()-1]); // center node
-                positions->push_back(state.positions[i]);
+                indices->push_back(1);
+                indices->push_back(2);
+                indices->push_back(2);
+                indices->push_back(0);
+
+                positions->push_back(state.positions[triangles[i][0]]);
+                positions->push_back(state.positions[triangles[i][1]]);
+                positions->push_back(state.positions[triangles[i][2]]);
 
                 line_->UpdatePositions(std::move(positions));
                 line_->UpdateIndices(std::move(indices));
                 auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line_);
                 rc_curve.SetDrawMode(DrawMode::Lines);
-
-                // line_ptrs.push_back(line_);
-                // AddChild(std::move(line_node));
-                // system.AddSpring(n*i+j, n*(i+1)+j, l, k);
+                surface_line_ptrs.push_back(line_);
+                AddChild(std::move(line_node));
             }
 
-            for (int i = 0; i < state.positions.size()-1; i++) { // add springs from center node to all other nodes
+            for (int i = 0; i < state.positions.size()-1; i++) { // add radial springs
                 auto line_node = make_unique<SceneNode>();
                 line_node->CreateComponent<ShadingComponent>(line_shader_);
                 auto line_ = std::make_shared<VertexObject>();
@@ -166,34 +141,11 @@ namespace GLOO {
                 auto &rc_curve = line_node->CreateComponent<RenderingComponent>(line_);
                 rc_curve.SetDrawMode(DrawMode::Lines);
 
-                line_ptrs.push_back(line_);
+                radial_line_ptrs.push_back(line_);
                 AddChild(std::move(line_node));
                 system.AddSpring(state.positions.size()-1, i, l, k);
             }
-
-            
-            // for (int i = 0; i < n; i++) { // add structural springs
-            //     for (int j = 0; j < n; j++) {
-            //         if (i+1 < n && j+1 < n) { // diagonal down & right springs
-            //             system.AddSpring(n*i+j, n*(i+1)+j+1, l, k);
-            //         }
-            //         if (i+1 < n && j-1 > -1) { // diagonal down & left springs
-            //             system.AddSpring(n*i+j, n*(i+1)+j-1, l, k);
-            //         }
-            //     }
-            // }
-
-            // for (int i = 0; i < n; i++) { // add flex springs
-            //     for (int j = 0; j < n; j++) {
-            //         if (i+2 < n) { // horizontal springs
-            //             system.AddSpring(n*i+j, n*(i+2)+j, l, k);
-            //         }
-            //         if (j+2 < n) { // vertical springs
-            //             system.AddSpring(n*i+j, n*i+j+2, l, k);
-            //         }
-            //     }
-            // }
-
+           
             // render spheres
             for (int i = 0; i < ico_positions.size(); i++) {
                 auto sphere_node = make_unique<SceneNode>();
@@ -214,7 +166,7 @@ namespace GLOO {
                     sphere_ptrs[i]->GetTransform().SetPosition(state.positions[i]);
                 }
                 for (int i = 0; i < state.positions.size()-1; i++) { // update central springs
-                    auto line = line_ptrs[i];
+                    auto line = radial_line_ptrs[i];
                     auto line_positions = make_unique<PositionArray>();
                     auto line_indices = make_unique<IndexArray>();
                     line_positions->push_back(state.positions[state.positions.size()-1]);
@@ -255,7 +207,8 @@ namespace GLOO {
 
         std::vector<SceneNode*> sphere_ptrs;
         std::vector<SceneNode*> line_node_ptrs;
-        std::vector<std::shared_ptr<VertexObject>> line_ptrs;
+        std::vector<std::shared_ptr<VertexObject>> surface_line_ptrs;
+        std::vector<std::shared_ptr<VertexObject>> radial_line_ptrs;
         std::vector<glm::vec3> ico_positions;
         std::vector<glm::vec3> velocities;
         std::vector<glm::vec3> triangles;
