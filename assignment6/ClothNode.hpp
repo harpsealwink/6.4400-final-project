@@ -66,59 +66,60 @@ class ClothNode : public SceneNode {
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
 
+            addTriangle(0, 11, 5);
+            addTriangle(0, 5, 1);
+            addTriangle(0, 1, 7);
+            addTriangle(0, 7, 10);
+            addTriangle(0, 10, 11);
+            addTriangle(1, 5, 9);
+            addTriangle(5, 11, 4);
+            addTriangle(11, 10, 2);
+            addTriangle(10, 7, 6);
+            addTriangle(7, 1, 8);
+            addTriangle(3, 9, 4);
+            addTriangle(3, 4, 2);
+            addTriangle(3, 2, 6);
+            addTriangle(3, 6, 8);
+            addTriangle(3, 8, 9);
+            addTriangle(4, 9, 5);
+            addTriangle(2, 4, 11);
+            addTriangle(6, 2, 10);
+            addTriangle(8, 6, 7);
+            addTriangle(9, 8, 1);
+
 
             state = {positions, velocities};
             integrator = IntegratorFactory::CreateIntegrator<PendulumSystem, ParticleState>(integrator_type);
             step_size = integration_step;
             
-            // for (int i = 0; i < n; i++) { // add structural springs
-            //     for (int j = 0; j < n; j++) {
-            //         if (i+1 < n) { // vertical springs
-            //             auto line_node = make_unique<SceneNode>();
-            //             line_node->CreateComponent<ShadingComponent>(line_shader_);
-            //             auto line_ = std::make_shared<VertexObject>();
-            //             line_node->CreateComponent<MaterialComponent>(material);
+            for (int i = 0; i < triangles.size(); i++) { // add structural springs
+                int node_idx = floor(i/3);
+                auto line_node = make_unique<SceneNode>();
+                line_node->CreateComponent<ShadingComponent>(line_shader_);
+                auto line_ = std::make_shared<VertexObject>();
+                line_node->CreateComponent<MaterialComponent>(material);
+                auto positions = make_unique<PositionArray>();
+                auto indices = make_unique<IndexArray>();
+                indices->push_back(0);
+                indices->push_back(1);
 
-            //             auto positions = make_unique<PositionArray>();
-            //             positions->push_back(state.positions[n*i+j]);
-            //             positions->push_back(state.positions[n*(i+1)+j]);
-            //             auto indices = make_unique<IndexArray>();
-            //             indices->push_back(0);
-            //             indices->push_back(1);
-            //             line_->UpdatePositions(std::move(positions));
-            //             line_->UpdateIndices(std::move(indices));
-            //             auto &rc_curve = line_node->CreateComponent<RenderingComponent>(line_);
-            //             rc_curve.SetDrawMode(DrawMode::Lines);
+                if (i % 3 == 2) { // if we are at third vertex of triangle
+                    positions->push_back(state.positions[node_idx]);
+                    positions->push_back(state.positions[node_idx+1]);
+                } else {
+                    positions->push_back(state.positions[node_idx]);
+                    positions->push_back(state.positions[node_idx-2]);
+                }
+                
+                line_->UpdatePositions(std::move(positions));
+                line_->UpdateIndices(std::move(indices));
+                auto &rc_curve = line_node->CreateComponent<RenderingComponent>(line_);
+                rc_curve.SetDrawMode(DrawMode::Lines);
 
-            //             line_ptrs.push_back(line_);
-            //             // line_node_ptrs.push_back(line_node.get());
-            //             AddChild(std::move(line_node));
-            //             system.AddSpring(n*i+j, n*(i+1)+j, l, k);
-            //         }
-            //         if (j+1 < n) { // horizontal springs
-            //             auto line_node = make_unique<SceneNode>();
-            //             line_node->CreateComponent<ShadingComponent>(line_shader_);
-            //             auto line_ = std::make_shared<VertexObject>();
-            //             line_node->CreateComponent<MaterialComponent>(material);
-
-            //             auto positions = make_unique<PositionArray>();
-            //             positions->push_back(state.positions[n*i+j]);
-            //             positions->push_back(state.positions[n*i+j+1]);
-            //             auto indices = make_unique<IndexArray>();
-            //             indices->push_back(0);
-            //             indices->push_back(1);
-            //             line_->UpdatePositions(std::move(positions));
-            //             line_->UpdateIndices(std::move(indices));
-            //             auto &rc_curve = line_node->CreateComponent<RenderingComponent>(line_);
-            //             rc_curve.SetDrawMode(DrawMode::Lines);
-
-            //             line_ptrs.push_back(line_);
-            //             // line_node_ptrs.push_back(line_node.get());
-            //             AddChild(std::move(line_node));
-            //             system.AddSpring(n*i+j, n*i+j+1, l, k);
-            //         }
-            //     }
-            // }
+                line_ptrs.push_back(line_);
+                AddChild(std::move(line_node));
+                // system.AddSpring(n*i+j, n*(i+1)+j, l, k);
+            }
             
             // for (int i = 0; i < n; i++) { // add structural springs
             //     for (int j = 0; j < n; j++) {
@@ -212,11 +213,11 @@ class ClothNode : public SceneNode {
             }
         }
 
-        void addTriangle(uint32_t a, uint32_t b, uint32_t c)
+        void addTriangle(int a, int b, int c)
         {
-            triangles.emplace_back(a);
-            triangles.emplace_back(b);
-            triangles.emplace_back(c);
+            triangles.push_back(a);
+            triangles.push_back(b);
+            triangles.push_back(c);
         }
 
         std::vector<SceneNode*> sphere_ptrs;
@@ -224,11 +225,10 @@ class ClothNode : public SceneNode {
         std::vector<std::shared_ptr<VertexObject>> line_ptrs;
         std::vector<glm::vec3> positions;
         std::vector<glm::vec3> velocities;  
-        std::vector<glm::vec3> triangles;  
+        std::vector<int> triangles;  
         ParticleState state;
         PendulumSystem system;
         std::unique_ptr<IntegratorBase<PendulumSystem, ParticleState>> integrator; 
-        int n = 5; // dimensions of cloth (number of spheres per side)
         float l = 0.11; // spring rest length 
         int k = 20; // spring constant
         float step_size;
