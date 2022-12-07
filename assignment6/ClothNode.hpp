@@ -25,44 +25,44 @@ namespace GLOO {
             std::shared_ptr<VertexObject> sphere_mesh_ = PrimitiveFactory::CreateSphere(0.03f, 25, 25);
 
             // create 12 vertices of a icosahedron
-            float t = 0.5;
+            float t = (1.f + sqrt(5.f)) / 2.f;
 
-            positions.push_back(glm::vec3(-1.f, t, 0.f));
+            ico_positions.push_back(glm::vec3(-1.f, t, 0.f));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(1.f, t, 0.f));
+            ico_positions.push_back(glm::vec3(1.f, t, 0.f));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(-1.f, -t, 0.f));
+            ico_positions.push_back(glm::vec3(-1.f, -t, 0.f));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(1.f, -t, 0.f));
-            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system.AddMass(0.1, 1);
-
-            positions.push_back(glm::vec3(0.f, -1.f, t));
-            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(0.f, 1.f, t));
-            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(0.f, -1.f, -t));
-            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(0.f, 1.f, -t));
+            ico_positions.push_back(glm::vec3(1.f, -t, 0.f));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
 
-            positions.push_back(glm::vec3(t, 0.f, -1));
+            ico_positions.push_back(glm::vec3(0.f, -1.f, t));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(t, 0.f, 1.f));
+            ico_positions.push_back(glm::vec3(0.f, 1.f, t));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(-t, 0.f, -1));
+            ico_positions.push_back(glm::vec3(0.f, -1.f, -t));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(-t, 0.f, 1.f));
+            ico_positions.push_back(glm::vec3(0.f, 1.f, -t));
+            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
+            system.AddMass(0.1, 1);
+
+            ico_positions.push_back(glm::vec3(t, 0.f, -1));
+            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
+            system.AddMass(0.1, 1);
+            ico_positions.push_back(glm::vec3(t, 0.f, 1.f));
+            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
+            system.AddMass(0.1, 1);
+            ico_positions.push_back(glm::vec3(-t, 0.f, -1));
+            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
+            system.AddMass(0.1, 1);
+            ico_positions.push_back(glm::vec3(-t, 0.f, 1.f));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
 
@@ -88,31 +88,29 @@ namespace GLOO {
             addTriangle(9, 8, 1);
 
 
-            state = { positions, velocities };
+            state = { ico_positions, velocities };
             integrator = IntegratorFactory::CreateIntegrator<PendulumSystem, ParticleState>(integrator_type);
             step_size = integration_step;
 
             for (int i = 0; i < triangles.size(); i++) { // add structural springs
-                int node_idx = i / 3;
                 auto line_node = make_unique<SceneNode>();
                 line_node->CreateComponent<ShadingComponent>(line_shader_);
                 auto line_ = std::make_shared<VertexObject>();
                 line_node->CreateComponent<MaterialComponent>(material);
-                auto positions = make_unique<PositionArray>();
+                auto tri_positions = make_unique<PositionArray>();
                 auto indices = make_unique<IndexArray>();
                 indices->push_back(0);
                 indices->push_back(1);
+                indices->push_back(1);
+                indices->push_back(2);
+                indices->push_back(2);
+                indices->push_back(0);
 
-                if (i % 3 == 2) { // if we are at third vertex of triangle
-                    positions->push_back(state.positions[node_idx]);
-                    positions->push_back(state.positions[node_idx + 1]);
-                }
-                else {
-                    positions->push_back(state.positions[node_idx]);
-                    positions->push_back(state.positions[node_idx - 2]);
-                }
+                tri_positions->push_back(state.positions[triangles[i][0]]); 
+                tri_positions->push_back(state.positions[triangles[i][1]]);
+                tri_positions->push_back(state.positions[triangles[i][2]]);
 
-                line_->UpdatePositions(std::move(positions));
+                line_->UpdatePositions(std::move(tri_positions));
                 line_->UpdateIndices(std::move(indices));
                 auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line_);
                 rc_curve.SetDrawMode(DrawMode::Lines);
@@ -120,6 +118,7 @@ namespace GLOO {
                 line_ptrs.push_back(line_);
                 AddChild(std::move(line_node));
                 // system.AddSpring(n*i+j, n*(i+1)+j, l, k);
+                //if (i == 1) break;
             }
 
             // for (int i = 0; i < n; i++) { // add structural springs
@@ -145,7 +144,7 @@ namespace GLOO {
             // }
 
             // render spheres
-            for (int i = 0; i < positions.size(); i++) {
+            for (int i = 0; i < ico_positions.size(); i++) {
                 auto sphere_node = make_unique<SceneNode>();
                 sphere_node->CreateComponent<RenderingComponent>(sphere_mesh_);
                 sphere_node->CreateComponent<MaterialComponent>(material);
@@ -198,7 +197,7 @@ namespace GLOO {
             static bool prev_released = true;
             if (InputManager::GetInstance().IsKeyPressed('R')) {
                 if (prev_released) {
-                    state = { positions, velocities };
+                    state = { ico_positions, velocities };
                 }
                 prev_released = false;
             }
@@ -218,17 +217,15 @@ namespace GLOO {
 
         void addTriangle(int a, int b, int c)
         {
-            triangles.push_back(a);
-            triangles.push_back(b);
-            triangles.push_back(c);
+            triangles.push_back(glm::vec3(a, b, c));
         }
 
         std::vector<SceneNode*> sphere_ptrs;
         std::vector<SceneNode*> line_node_ptrs;
         std::vector<std::shared_ptr<VertexObject>> line_ptrs;
-        std::vector<glm::vec3> positions;
+        std::vector<glm::vec3> ico_positions;
         std::vector<glm::vec3> velocities;
-        std::vector<int> triangles;
+        std::vector<glm::vec3> triangles;
         ParticleState state;
         PendulumSystem system;
         std::unique_ptr<IntegratorBase<PendulumSystem, ParticleState>> integrator;
