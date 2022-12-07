@@ -16,10 +16,10 @@
 
 
 namespace GLOO {
-class ClothNode : public SceneNode {
+    class ClothNode : public SceneNode {
     public:
         ClothNode(IntegratorType integrator_type, float integration_step) {
-            auto material = std::make_shared<Material>(glm::vec3(0.6f, 0.2f, 0.25f), glm::vec3(0.6f, 0.2f, 0.25f), glm::vec3(0.1f, 0.1f, 0.1f), 20.0f); 
+            auto material = std::make_shared<Material>(glm::vec3(0.6f, 0.2f, 0.25f), glm::vec3(0.6f, 0.2f, 0.25f), glm::vec3(0.1f, 0.1f, 0.1f), 20.0f);
             auto line_shader_ = std::make_shared<SimpleShader>();
             auto shader_ = std::make_shared<PhongShader>();
             std::shared_ptr<VertexObject> sphere_mesh_ = PrimitiveFactory::CreateSphere(0.03f, 25, 25);
@@ -27,42 +27,42 @@ class ClothNode : public SceneNode {
             // create 12 vertices of a icosahedron
             float t = 0.5;
 
-            positions.push_back(glm::vec3(-1,  t,  0));
+            positions.push_back(glm::vec3(-1.f, t, 0.f));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3( 1,  t,  0));
+            positions.push_back(glm::vec3(1.f, t, 0.f));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(-1, -t,  0));
+            positions.push_back(glm::vec3(-1.f, -t, 0.f));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3( 1, -t,  0));
-            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system.AddMass(0.1, 1);
-
-            positions.push_back(glm::vec3( 0, -1,  t));
-            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3( 0,  1,  t));
-            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3( 0, -1, -t));
-            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3( 0,  1, -t));
+            positions.push_back(glm::vec3(1.f, -t, 0.f));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
 
-            positions.push_back(glm::vec3( t,  0, -1));
+            positions.push_back(glm::vec3(0.f, -1.f, t));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3( t,  0,  1));
+            positions.push_back(glm::vec3(0.f, 1.f, t));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(-t,  0, -1));
+            positions.push_back(glm::vec3(0.f, -1.f, -t));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
-            positions.push_back(glm::vec3(-t,  0,  1));
+            positions.push_back(glm::vec3(0.f, 1.f, -t));
+            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
+            system.AddMass(0.1, 1);
+
+            positions.push_back(glm::vec3(t, 0.f, -1));
+            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
+            system.AddMass(0.1, 1);
+            positions.push_back(glm::vec3(t, 0.f, 1.f));
+            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
+            system.AddMass(0.1, 1);
+            positions.push_back(glm::vec3(-t, 0.f, -1));
+            velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
+            system.AddMass(0.1, 1);
+            positions.push_back(glm::vec3(-t, 0.f, 1.f));
             velocities.push_back(glm::vec3(0.f, 0.f, 0.f));
             system.AddMass(0.1, 1);
 
@@ -88,12 +88,12 @@ class ClothNode : public SceneNode {
             addTriangle(9, 8, 1);
 
 
-            state = {positions, velocities};
+            state = { positions, velocities };
             integrator = IntegratorFactory::CreateIntegrator<PendulumSystem, ParticleState>(integrator_type);
             step_size = integration_step;
-            
+
             for (int i = 0; i < triangles.size(); i++) { // add structural springs
-                int node_idx = floor(i/3);
+                int node_idx = i / 3;
                 auto line_node = make_unique<SceneNode>();
                 line_node->CreateComponent<ShadingComponent>(line_shader_);
                 auto line_ = std::make_shared<VertexObject>();
@@ -105,22 +105,23 @@ class ClothNode : public SceneNode {
 
                 if (i % 3 == 2) { // if we are at third vertex of triangle
                     positions->push_back(state.positions[node_idx]);
-                    positions->push_back(state.positions[node_idx+1]);
-                } else {
-                    positions->push_back(state.positions[node_idx]);
-                    positions->push_back(state.positions[node_idx-2]);
+                    positions->push_back(state.positions[node_idx + 1]);
                 }
-                
+                else {
+                    positions->push_back(state.positions[node_idx]);
+                    positions->push_back(state.positions[node_idx - 2]);
+                }
+
                 line_->UpdatePositions(std::move(positions));
                 line_->UpdateIndices(std::move(indices));
-                auto &rc_curve = line_node->CreateComponent<RenderingComponent>(line_);
+                auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line_);
                 rc_curve.SetDrawMode(DrawMode::Lines);
 
                 line_ptrs.push_back(line_);
                 AddChild(std::move(line_node));
                 // system.AddSpring(n*i+j, n*(i+1)+j, l, k);
             }
-            
+
             // for (int i = 0; i < n; i++) { // add structural springs
             //     for (int j = 0; j < n; j++) {
             //         if (i+1 < n && j+1 < n) { // diagonal down & right springs
@@ -197,18 +198,20 @@ class ClothNode : public SceneNode {
             static bool prev_released = true;
             if (InputManager::GetInstance().IsKeyPressed('R')) {
                 if (prev_released) {
-                    state = {positions, velocities};
+                    state = { positions, velocities };
                 }
                 prev_released = false;
-            } else if (InputManager::GetInstance().IsKeyPressed('W')) {
+            }
+            else if (InputManager::GetInstance().IsKeyPressed('W')) {
                 wind = true;
-            } else {
+            }
+            else {
                 prev_released = true;
             }
             if (wind) {
                 for (int i = 0; i < state.velocities.size(); i++) {
                     int rand_num = rand() % 20;
-                    state.velocities[i] += glm::vec3(0.f, 0.f, -0.02f*rand_num); // random backwards wind force
+                    state.velocities[i] += glm::vec3(0.f, 0.f, -0.02f * rand_num); // random backwards wind force
                 }
             }
         }
@@ -224,15 +227,15 @@ class ClothNode : public SceneNode {
         std::vector<SceneNode*> line_node_ptrs;
         std::vector<std::shared_ptr<VertexObject>> line_ptrs;
         std::vector<glm::vec3> positions;
-        std::vector<glm::vec3> velocities;  
-        std::vector<int> triangles;  
+        std::vector<glm::vec3> velocities;
+        std::vector<int> triangles;
         ParticleState state;
         PendulumSystem system;
-        std::unique_ptr<IntegratorBase<PendulumSystem, ParticleState>> integrator; 
+        std::unique_ptr<IntegratorBase<PendulumSystem, ParticleState>> integrator;
         float l = 0.11; // spring rest length 
         int k = 20; // spring constant
         float step_size;
-};
+    };
 }  // namespace GLOO
 
 #endif
