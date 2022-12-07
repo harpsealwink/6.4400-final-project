@@ -228,7 +228,7 @@ class ClothNode : public SceneNode {
         ParticleState state;
         PendulumSystem system;
         std::unique_ptr<IntegratorBase<PendulumSystem, ParticleState>> integrator; 
-        int n = 20; // dimensions of cloth (number of spheres per side)
+        int n = 5; // dimensions of cloth (number of spheres per side)
         float l = 0.11; // spring rest length 
         int k = 20; // spring constant
         float step_size;
