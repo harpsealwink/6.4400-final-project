@@ -47,8 +47,8 @@ class PendulumSystem : public ParticleSystemBase {
             return {positions, velocities};
         }
 
-        void AddMass(float m, int is_fixed) {
-            // adds particle of mass m (fixes particle if is_fixed=1)
+        void AddMass(float m, bool is_fixed) {
+            // adds particle of mass m (fixes particle if is_fixed=true)
             fixed.push_back(is_fixed);
             particle_masses.push_back(m);
         }
@@ -60,7 +60,7 @@ class PendulumSystem : public ParticleSystemBase {
 
 
         std::vector<glm::vec4> springs;
-        std::vector<int> fixed; // for each index i, 1 if particle i is fixed, else 0
+        std::vector<bool> fixed; // for each index i, true if particle i is fixed, else false
         std::vector<float> particle_masses; // for each index i, contains particle i's mass
 };
 }  // namespace GLOO
