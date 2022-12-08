@@ -22,66 +22,43 @@ namespace GLOO {
             integrator_ = IntegratorFactory::CreateIntegrator<PendulumSystem, ParticleState>(integrator_type);
             step_size_ = integration_step;
 
-            auto surface_material = std::make_shared<Material>(
-                glm::vec3(1.f, 0.f, 0.f),
-                glm::vec3(1.f, 0.f, 0.f),
-                glm::vec3(1.f, 0.f, 0.f), 20.0f);
-            auto radial_material = std::make_shared<Material>(
-                glm::vec3(0.f, 0.f, 0.f),
-                glm::vec3(0.f, 0.f, 0.f),
-                glm::vec3(0.f, 0.f, 0.f), 20.0f);
-            auto line_shader = std::make_shared<SimpleShader>();
-            auto shader = std::make_shared<PhongShader>();
-            std::shared_ptr<VertexObject> sphere_mesh = PrimitiveFactory::CreateSphere(0.03f, 25, 25);
-
             // initialize icosahedron
             glm::vec3 center(0.f, 0.f, 0.f);
             float scale = 1.f;
             glm::vec3 velocity(0.f, 0.f, 0.f);
             InitIcosahedron(center, scale, velocity);
 
-            // http://www.songho.ca/opengl/gl_sphere.html
-            // subdivision of initial icosahedron into icosphere
-            // refine triangles
-            std::vector<glm::vec3> new_triangles;
-            for (glm::vec3 triangle : triangles_) {
-                //         v0       
-                //        / \       
-                //    v3 *---* v5
-                //      / \ / \     
-                //    v1---*---v2   
-                //         v4     
-
-                // original vertices
-                int i0 = triangle[0];
-                int i1 = triangle[1];
-                int i2 = triangle[2];
-                glm::vec3 v0 = positions_[i0] - center;
-                glm::vec3 v1 = positions_[i1] - center;
-                glm::vec3 v2 = positions_[i2] - center;
-                // new vertices
-                int i3 = positions_.size();
-                int i4 = positions_.size() + 1;
-                int i5 = positions_.size() + 2;
-                glm::vec3 v3 = glm::normalize(v0 + v1) * (glm::length(v0) + glm::length(v1)) / 2.f;
-                glm::vec3 v4 = glm::normalize(v1 + v2) * (glm::length(v1) + glm::length(v2)) / 2.f;
-                glm::vec3 v5 = glm::normalize(v2 + v0) * (glm::length(v2) + glm::length(v0)) / 2.f;
-
-                AddVertex(v3, velocity, vertex_mass_, false);
-                AddVertex(v4, velocity, vertex_mass_, false);
-                AddVertex(v5, velocity, vertex_mass_, false);
-                new_triangles.push_back(glm::vec3(i0, i5, i3));
-                new_triangles.push_back(glm::vec3(i1, i3, i4));
-                new_triangles.push_back(glm::vec3(i2, i4, i5));
-                new_triangles.push_back(glm::vec3(i3, i4, i5));
+            // subdivide icosahedron into icosphere
+            for (int n = 0; n < subdivisions_; n++) {
+                std::vector<glm::vec3> new_triangles; // 1 original triangle --> 4 new triangles
+                for (glm::vec3 triangle : triangles_) {
+                    // http://www.songho.ca/opengl/gl_sphere.html
+                    //         v0       
+                    //        / \       
+                    //    v3 *---* v5
+                    //      / \ / \     
+                    //    v1---*---v2   
+                    //         v4     
+                    int i0 = triangle[0];
+                    int i1 = triangle[1];
+                    int i2 = triangle[2];
+                    int i3 = AddMidpoint(i0, i1, velocity, vertex_mass_, vertex_fixed_);
+                    int i4 = AddMidpoint(i1, i2, velocity, vertex_mass_, vertex_fixed_);
+                    int i5 = AddMidpoint(i2, i0, velocity, vertex_mass_, vertex_fixed_);
+                    new_triangles.push_back(glm::vec3(i0, i5, i3));
+                    new_triangles.push_back(glm::vec3(i1, i3, i4));
+                    new_triangles.push_back(glm::vec3(i2, i4, i5));
+                    new_triangles.push_back(glm::vec3(i3, i4, i5));
+                }
+                midpt_cache_.clear();
+                triangles_ = new_triangles;
             }
-            triangles_ = new_triangles;
 
             // add surface springs
             for (size_t i = 0; i < triangles_.size(); i++) {
                 auto line_node = make_unique<SceneNode>();
-                line_node->CreateComponent<MaterialComponent>(surface_material);
-                line_node->CreateComponent<ShadingComponent>(line_shader);
+                line_node->CreateComponent<MaterialComponent>(blue_material_);
+                line_node->CreateComponent<ShadingComponent>(line_shader_);
 
                 auto positions = make_unique<PositionArray>();
                 auto indices = make_unique<IndexArray>();
@@ -98,20 +75,21 @@ namespace GLOO {
                 line->UpdatePositions(std::move(positions));
                 line->UpdateIndices(std::move(indices));
 
-                auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
-                rc_curve.SetDrawMode(DrawMode::Lines);
-                surface_line_ptrs_.push_back(line);
-                AddChild(std::move(line_node));
                 system_.AddSpring(triangles_[i][0], triangles_[i][1], surface_l_, surface_k_);
                 system_.AddSpring(triangles_[i][1], triangles_[i][2], surface_l_, surface_k_);
                 system_.AddSpring(triangles_[i][2], triangles_[i][0], surface_l_, surface_k_);
+
+                auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
+                rc_curve.SetDrawMode(DrawMode::Lines);
+                surface_line_ptrs_.push_back(line);
+                //AddChild(std::move(line_node));
             }
 
             // add radial springs
             for (size_t i = 1; i < positions_.size(); i++) {
                 auto line_node = make_unique<SceneNode>();
-                line_node->CreateComponent<MaterialComponent>(radial_material);
-                line_node->CreateComponent<ShadingComponent>(line_shader);
+                line_node->CreateComponent<MaterialComponent>(green_material_);
+                line_node->CreateComponent<ShadingComponent>(line_shader_);
 
                 auto positions = make_unique<PositionArray>();
                 auto indices = make_unique<IndexArray>();
@@ -123,19 +101,20 @@ namespace GLOO {
                 line->UpdatePositions(std::move(positions));
                 line->UpdateIndices(std::move(indices));
 
+                system_.AddSpring(0, i, radial_l_, radial_k_);
+
                 auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
                 rc_curve.SetDrawMode(DrawMode::Lines);
                 radial_line_ptrs_.push_back(line);
-                AddChild(std::move(line_node));
-                system_.AddSpring(0, i, radial_l_, radial_k_);
+                //AddChild(std::move(line_node));
             }
 
             // render spheres
             for (size_t i = 0; i < positions_.size(); i++) {
                 auto sphere_node = make_unique<SceneNode>();
-                sphere_node->CreateComponent<MaterialComponent>(surface_material);
-                sphere_node->CreateComponent<ShadingComponent>(shader);
-                sphere_node->CreateComponent<RenderingComponent>(sphere_mesh);
+                sphere_node->CreateComponent<MaterialComponent>(red_material_);
+                sphere_node->CreateComponent<ShadingComponent>(shader_);
+                sphere_node->CreateComponent<RenderingComponent>(sphere_mesh_);
                 sphere_node_ptrs_.push_back(sphere_node.get());
                 AddChild(std::move(sphere_node));
             }
@@ -198,15 +177,11 @@ namespace GLOO {
         }
     private:
         void InitIcosahedron(glm::vec3 center, float scale, glm::vec3 velocity) {
-            bool vertices_fixed = false;
-            bool center_fixed = true;
             // center
-            positions_.push_back(icosa_vertices_[0] * scale + center);
-            velocities_.push_back(velocity);
-            system_.AddMass(center_mass_, center_fixed);
+            AddVertex(icosa_vertices_[0] * scale + center, velocity, center_mass_, center_fixed_);
             // 12 vertices
             for (int i = 1; i <= 12; i++) {
-                AddVertex(icosa_vertices_[i] * scale + center, velocity, vertex_mass_, vertices_fixed);
+                AddVertex(icosa_vertices_[i] * scale + center, velocity, vertex_mass_, vertex_fixed_);
             }
             // 20 faces
             for (glm::vec3 face : icosa_faces_) {
@@ -218,25 +193,72 @@ namespace GLOO {
             velocities_.push_back(velocity);
             system_.AddMass(mass, fixed);
         }
+        int AddMidpoint(int i0, int i1, glm::vec3 velocity, float mass, bool fixed) {
+            int i2 = GetMidpointIndex(i0, i1);
+            if (i2 == positions_.size()) {
+                glm::vec3 v0 = positions_[i0] - positions_[0];
+                glm::vec3 v1 = positions_[i1] - positions_[0];
+                glm::vec3 v2 = glm::normalize(v0 + v1) * (glm::length(v0) + glm::length(v1)) / 2.f;
+                AddVertex(v2 + positions_[0], velocity, mass, fixed);
+            }
+            return i2;
+        }
+        int GetMidpointIndex(int i0, int i1) { // indices of endpts
+            int key = (i0 * i1 << 12) + (i0 + i1); // "hash" of unordered pair (i0, i1)
+            auto search = midpt_cache_.find(key);
+            if (search == midpt_cache_.end()) { // midpoint is a new vertex
+                midpt_cache_.insert({ key, positions_.size() });
+                return positions_.size();
+            }
+            else {
+                return search->second; // midpoint is already a vertex
+            }
+        }
 
+        // SCENENODE COMPONENT PARAMS
+        std::shared_ptr<Material> red_material_ = std::make_shared<Material>(
+            glm::vec3(1.f, 0.f, 0.f),
+            glm::vec3(1.f, 0.f, 0.f),
+            glm::vec3(1.f, 0.f, 0.f), 20.0f);
+        std::shared_ptr<Material> green_material_ = std::make_shared<Material>(
+            glm::vec3(0.f, 1.f, 0.f),
+            glm::vec3(0.f, 1.f, 0.f),
+            glm::vec3(0.f, 1.f, 0.f), 20.0f);
+        std::shared_ptr<Material> blue_material_ = std::make_shared<Material>(
+            glm::vec3(0.f, 0.f, 1.f),
+            glm::vec3(0.f, 0.f, 1.f),
+            glm::vec3(0.f, 0.f, 1.f), 20.0f);
+        std::shared_ptr<SimpleShader> line_shader_ = std::make_shared<SimpleShader>();
+        std::shared_ptr<PhongShader> shader_ = std::make_shared<PhongShader>();
+        std::shared_ptr<VertexObject> sphere_mesh_ = PrimitiveFactory::CreateSphere(0.03f, 25, 25);
+
+        // SCENENODE POINTERS
         std::vector<SceneNode*> sphere_node_ptrs_;
         //std::vector<SceneNode*> line_node_ptrs_;
         std::vector<std::shared_ptr<VertexObject>> surface_line_ptrs_;
         std::vector<std::shared_ptr<VertexObject>> radial_line_ptrs_;
+
+        // SIMULATION INFO
         std::vector<glm::vec3> positions_;
         std::vector<glm::vec3> velocities_;
         std::vector<glm::vec3> triangles_;
         ParticleState state_;
         PendulumSystem system_;
         std::unique_ptr<IntegratorBase<PendulumSystem, ParticleState>> integrator_;
+        float step_size_;
+
+        // ICOSPHERE PARAMS
+        int subdivisions_ = 1;
+        bool center_fixed_ = true;
+        bool vertex_fixed_ = false;
         float center_mass_ = 0.1;
         float vertex_mass_ = 0.1;
-        float surface_l_ = 1.f; // TODO: figure out actual rest lengths by calculating edge lengths and radius
+        float surface_l_ = 2.f / (subdivisions_+1); // TODO: figure out actual rest lengths by calculating edge lengths and radius
         float surface_k_ = 50.f;
         float radial_l_ = 2.f;
         float radial_k_ = 50.f;
-        float step_size_;
-
+        std::unordered_map<int, int> midpt_cache_;
+        
         // http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
         // ICOSAHEDRON DATA 
         const float t_ = (1.f + sqrt(5.f)) / 2.f;
