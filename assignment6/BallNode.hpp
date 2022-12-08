@@ -19,76 +19,21 @@ namespace GLOO {
     class BallNode : public SceneNode {
     public:
         BallNode(IntegratorType integrator_type, float integration_step) {
-            auto material = std::make_shared<Material>(glm::vec3(0.6f, 0.2f, 0.25f), glm::vec3(0.6f, 0.2f, 0.25f), glm::vec3(0.1f, 0.1f, 0.1f), 20.0f);
-            auto line_shader_ = std::make_shared<SimpleShader>();
-            auto shader_ = std::make_shared<PhongShader>();
-            std::shared_ptr<VertexObject> sphere_mesh_ = PrimitiveFactory::CreateSphere(0.03f, 25, 25);
+            auto material = std::make_shared<Material>(
+                glm::vec3(0.6f, 0.2f, 0.25f),
+                glm::vec3(0.6f, 0.2f, 0.25f),
+                glm::vec3(0.1f, 0.1f, 0.1f), 20.0f);
+            auto line_shader = std::make_shared<SimpleShader>();
+            auto shader = std::make_shared<PhongShader>();
+            std::shared_ptr<VertexObject> sphere_mesh = PrimitiveFactory::CreateSphere(0.03f, 25, 25);
 
-            // create 12 vertices of a icosahedron
-            const float t = (1.f + sqrt(5.f)) / 2.f;
-            float scale = .1;
-            glm::vec3 center(1.f, 0.f, 0.f);
-            bool fixed = false;
+            // initialize icosahedron
+            float scale = 1.f;
+            glm::vec3 center(0.f, 0.f, 0.f);
+            glm::vec3 velocity(0.f, 0.f, 0.f);
 
-            positions_.push_back(glm::vec3(-1.f, t, 0.f) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
-            positions_.push_back(glm::vec3(1.f, t, 0.f) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
-            positions_.push_back(glm::vec3(-1.f, -t, 0.f) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
-            positions_.push_back(glm::vec3(1.f, -t, 0.f) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
+            InitIcosahedron(center, scale, velocity);
 
-            positions_.push_back(glm::vec3(0.f, -1.f, t) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
-            positions_.push_back(glm::vec3(0.f, 1.f, t) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
-            positions_.push_back(glm::vec3(0.f, -1.f, -t) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
-            positions_.push_back(glm::vec3(0.f, 1.f, -t) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
-
-            positions_.push_back(glm::vec3(t, 0.f, -1) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
-            positions_.push_back(glm::vec3(t, 0.f, 1.f) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
-            positions_.push_back(glm::vec3(-t, 0.f, -1) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
-            positions_.push_back(glm::vec3(-t, 0.f, 1.f) * scale + center);
-            velocities_.push_back(glm::vec3(0.f, 0.f, 0.f));
-            system_.AddMass(0.1, fixed);
-
-            AddTriangle(0, 11, 5);
-            AddTriangle(0, 5, 1);
-            AddTriangle(0, 1, 7);
-            AddTriangle(0, 7, 10);
-            AddTriangle(0, 10, 11);
-            AddTriangle(1, 5, 9);
-            AddTriangle(5, 11, 4);
-            AddTriangle(11, 10, 2);
-            AddTriangle(10, 7, 6);
-            AddTriangle(7, 1, 8);
-            AddTriangle(3, 9, 4);
-            AddTriangle(3, 4, 2);
-            AddTriangle(3, 2, 6);
-            AddTriangle(3, 6, 8);
-            AddTriangle(3, 8, 9);
-            AddTriangle(4, 9, 5);
-            AddTriangle(2, 4, 11);
-            AddTriangle(6, 2, 10);
-            AddTriangle(8, 6, 7);
-            AddTriangle(9, 8, 1);
 
             // add center node (connected with springs to all other nodes)
             positions_.push_back(center);
@@ -97,8 +42,8 @@ namespace GLOO {
 
             for (int i = 0; i < triangles_.size(); i++) { // add surface springs
                 auto line_node = make_unique<SceneNode>();
-                line_node->CreateComponent<ShadingComponent>(line_shader_);
-                auto line_ = std::make_shared<VertexObject>();
+                line_node->CreateComponent<ShadingComponent>(line_shader);
+                auto line = std::make_shared<VertexObject>();
                 line_node->CreateComponent<MaterialComponent>(material);
                 auto positions = make_unique<PositionArray>();
                 auto indices = make_unique<IndexArray>();
@@ -113,11 +58,11 @@ namespace GLOO {
                 positions->push_back(positions_[triangles_[i][1]]);
                 positions->push_back(positions_[triangles_[i][2]]);
 
-                line_->UpdatePositions(std::move(positions));
-                line_->UpdateIndices(std::move(indices));
-                auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line_);
+                line->UpdatePositions(std::move(positions));
+                line->UpdateIndices(std::move(indices));
+                auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
                 rc_curve.SetDrawMode(DrawMode::Lines);
-                surface_line_ptrs_.push_back(line_);
+                surface_line_ptrs_.push_back(line);
                 AddChild(std::move(line_node));
             }
 
@@ -125,8 +70,8 @@ namespace GLOO {
 
             for (int i = 0; i < positions_.size() - 1; i++) { // add radial springs
                 auto line_node = make_unique<SceneNode>();
-                line_node->CreateComponent<ShadingComponent>(line_shader_);
-                auto line_ = std::make_shared<VertexObject>();
+                line_node->CreateComponent<ShadingComponent>(line_shader);
+                auto line = std::make_shared<VertexObject>();
                 line_node->CreateComponent<MaterialComponent>(material);
                 auto positions = make_unique<PositionArray>();
                 auto indices = make_unique<IndexArray>();
@@ -136,12 +81,12 @@ namespace GLOO {
                 positions->push_back(positions_[positions_.size() - 1]); // center node
                 positions->push_back(positions_[i]);
 
-                line_->UpdatePositions(std::move(positions));
-                line_->UpdateIndices(std::move(indices));
-                auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line_);
+                line->UpdatePositions(std::move(positions));
+                line->UpdateIndices(std::move(indices));
+                auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
                 rc_curve.SetDrawMode(DrawMode::Lines);
 
-                radial_line_ptrs_.push_back(line_);
+                radial_line_ptrs_.push_back(line);
                 AddChild(std::move(line_node));
                 system_.AddSpring(positions_.size() - 1, i, l, k);
             }
@@ -149,9 +94,9 @@ namespace GLOO {
             // render spheres
             for (int i = 0; i < positions_.size(); i++) {
                 auto sphere_node = make_unique<SceneNode>();
-                sphere_node->CreateComponent<RenderingComponent>(sphere_mesh_);
+                sphere_node->CreateComponent<RenderingComponent>(sphere_mesh);
                 sphere_node->CreateComponent<MaterialComponent>(material);
-                sphere_node->CreateComponent<ShadingComponent>(shader_);
+                sphere_node->CreateComponent<ShadingComponent>(shader);
                 sphere_ptrs_.push_back(sphere_node.get());
                 AddChild(std::move(sphere_node));
             }
@@ -205,14 +150,18 @@ namespace GLOO {
             }
         }
     private:
-        void AddVertex(glm::vec3 position, glm::vec3 velocity, float mass, bool fixed) {
-            positions_.push_back(position);
-            velocities_.push_back(velocity);
-            system_.AddMass(mass, fixed);
-        }
+        void InitIcosahedron(glm::vec3 center, float scale, glm::vec3 velocity) {
+            float mass = 0.1;
+            bool fixed = false;
+            for (glm::vec3 vertex : icosa_vertices_) {
+                positions_.push_back(vertex * scale + center);
+                velocities_.push_back(velocity);
+                system_.AddMass(mass, fixed);
+            }
 
-        void AddTriangle(int a, int b, int c) { // vertices of triangle are at indices a, b, c
-            triangles_.push_back(glm::vec3(a, b, c));
+            for (glm::vec3 face : icosa_faces_) {
+                triangles_.push_back(face); // copy of icosa_faces_ for now
+            }
         }
 
         std::vector<SceneNode*> sphere_ptrs_;
@@ -228,8 +177,48 @@ namespace GLOO {
         float l = 0.5; // spring rest length 
         int k = 10; // spring constant
         float step_size_;
+
+        // ICOSAHEDRON DATA
+        const float t_ = (1.f + sqrt(5.f)) / 2.f;
+        const std::vector<glm::vec3> icosa_vertices_{ // (x,y,z) coords for each vertex of nontransformed icosahedron
+            glm::vec3(-1.f, t_, 0.f), // 12 vertices
+            glm::vec3(1.f, t_, 0.f),
+            glm::vec3(-1.f, -t_, 0.f),
+            glm::vec3(1.f, -t_, 0.f),
+            glm::vec3(0.f, -1.f, t_),
+            glm::vec3(0.f, 1.f, t_),
+            glm::vec3(0.f, -1.f, -t_),
+            glm::vec3(0.f, 1.f, -t_),
+            glm::vec3(t_, 0.f, -1),
+            glm::vec3(t_, 0.f, 1.f),
+            glm::vec3(-t_, 0.f, -1),
+            glm::vec3(-t_, 0.f, 1.f),
+            glm::vec3(0.f, 0.f, 0.f) // center
+        };
+        const std::vector<glm::vec3> icosa_faces_{ // (i,j,k) vertex indices for each face of icosahedron
+            glm::vec3(0, 11, 5),
+            glm::vec3(0, 5, 1),
+            glm::vec3(0, 1, 7),
+            glm::vec3(0, 7, 10),
+            glm::vec3(0, 10, 11),
+            glm::vec3(1, 5, 9),
+            glm::vec3(5, 11, 4),
+            glm::vec3(11, 10, 2),
+            glm::vec3(10, 7, 6),
+            glm::vec3(7, 1, 8),
+            glm::vec3(3, 9, 4),
+            glm::vec3(3, 4, 2),
+            glm::vec3(3, 2, 6),
+            glm::vec3(3, 6, 8),
+            glm::vec3(3, 8, 9),
+            glm::vec3(4, 9, 5),
+            glm::vec3(2, 4, 11),
+            glm::vec3(6, 2, 10),
+            glm::vec3(8, 6, 7),
+            glm::vec3(9, 8, 1),
+        };
     };
-}  // namespace GLOO
+} // namespace GLOO
 
 #endif
 
