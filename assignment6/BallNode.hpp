@@ -39,7 +39,7 @@ namespace GLOO {
             // TODO: subdivision of initial icosahedron into icosphere
 
             // add surface springs
-            for (int i = 0; i < triangles_.size(); i++) { 
+            for (size_t i = 0; i < triangles_.size(); i++) { 
                 auto line_node = make_unique<SceneNode>();
                 line_node->CreateComponent<MaterialComponent>(material);
                 line_node->CreateComponent<ShadingComponent>(line_shader);
@@ -69,7 +69,7 @@ namespace GLOO {
             }
 
             // add radial springs
-            for (int i = 0; i < positions_.size() - 1; i++) {
+            for (size_t i = 0; i < positions_.size() - 1; i++) {
                 auto line_node = make_unique<SceneNode>();
                 line_node->CreateComponent<MaterialComponent>(material);
                 line_node->CreateComponent<ShadingComponent>(line_shader);
@@ -92,7 +92,7 @@ namespace GLOO {
             }
 
             // render spheres
-            for (int i = 0; i < positions_.size(); i++) {
+            for (size_t i = 0; i < positions_.size(); i++) {
                 auto sphere_node = make_unique<SceneNode>();
                 sphere_node->CreateComponent<MaterialComponent>(material);
                 sphere_node->CreateComponent<ShadingComponent>(shader);
@@ -105,15 +105,15 @@ namespace GLOO {
         };
 
         void Update(double delta_time) {
-            float start_time = 0.f;
+            double start_time = 0.0;
             while (start_time < delta_time) {
                 state_ = integrator_->Integrate(system_, state_, start_time, fmin(step_size_, delta_time)); // step sizes cannot be greater than time
-                for (int i = 0; i < sphere_node_ptrs_.size(); i++) {
+                for (size_t i = 0; i < sphere_node_ptrs_.size(); i++) {
                     sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
                 }
 
                 // update radial springs
-                for (int i = 0; i < state_.positions.size() - 1; i++) {
+                for (size_t i = 0; i < state_.positions.size() - 1; i++) {
                     auto line = radial_line_ptrs_[i];
                     auto line_positions = make_unique<PositionArray>();
                     auto line_indices = make_unique<IndexArray>();
@@ -126,7 +126,7 @@ namespace GLOO {
                 }
 
                 // update surface springs
-                for (int i = 0; i < triangles_.size(); i++) {
+                for (size_t i = 0; i < triangles_.size(); i++) {
                     auto line = surface_line_ptrs_[i];
                     auto line_positions = make_unique<PositionArray>();
                     auto line_indices = make_unique<IndexArray>();
@@ -159,7 +159,7 @@ namespace GLOO {
         }
     private:
         void InitIcosahedron(glm::vec3 center, float scale, glm::vec3 velocity) {
-            float mass = 0.1;
+            float mass = 0.1f;
             bool vertices_fixed = false;
             bool center_fixed = true;
             // 12 vertices
