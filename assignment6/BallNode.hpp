@@ -103,7 +103,7 @@ namespace GLOO {
             double start_time = 0.0;
             while (start_time < delta_time) {
                 state_ = integrator_->Integrate(system_, state_, start_time, fmin(step_size_, delta_time)); // step sizes cannot be greater than time
-                
+
                 // update vertices
                 for (size_t i = 0; i < sphere_node_ptrs_.size(); i++) {
                     sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
@@ -158,21 +158,16 @@ namespace GLOO {
         void InitIcosahedron() {
             // center
             AddVertex(icosa_vertices_[0] * scale_ + start_center_, center_mass_, center_fixed_);
-            
+
             // 12 vertices
             for (int i = 1; i <= 12; i++) {
                 AddVertex(icosa_vertices_[i] * scale_ + start_center_, vertex_mass_, vertex_fixed_);
             }
-            
+
             // 20 faces
             for (glm::vec3 face : icosa_faces_) {
                 triangles_.push_back(face + glm::vec3(1, 1, 1)); // adjust indices by one since center is at index 0
             }
-        }
-        void AddVertex(glm::vec3 position, float mass, bool fixed) {
-            positions_.push_back(position);
-            velocities_.push_back(start_velocity_);
-            system_.AddMass(mass, fixed);
         }
         void SubdivideToIcosphere() {
             for (int n = 0; n < subdivisions_; n++) {
@@ -205,6 +200,11 @@ namespace GLOO {
                 midpt_cache_.clear();
                 triangles_ = new_triangles;
             }
+        }
+        void AddVertex(glm::vec3 position, float mass, bool fixed) {
+            positions_.push_back(position);
+            velocities_.push_back(start_velocity_);
+            system_.AddMass(mass, fixed);
         }
         int AddMidpoint(int i0, int i1, float mass, bool fixed) {
             int i2 = GetMidpointIndex(i0, i1);
@@ -261,19 +261,19 @@ namespace GLOO {
         float step_size_;
 
         // ICOSPHERE PARAMS
-        glm::vec3 start_center_ = glm::vec3(0.f, 0.f, 0.f);
+        glm::vec3 start_center_ = glm::vec3(0.f, 1.f, 0.f);
         glm::vec3 start_velocity_ = glm::vec3(0.f, 0.f, 0.f);
         bool center_fixed_ = true;
         bool vertex_fixed_ = false;
-        const float scale_ = 1.f;
+        const float scale_ = 0.2f;
         const int subdivisions_ = 1;
         const float center_mass_ = 0.1;
         const float vertex_mass_ = 0.1;
-        const float surface_k_ = 50.f;
+        const float surface_k_ = 20.f;
         const float radial_l_ = 1.90211 * scale_; // circumradius
-        float radial_k_ = 50.f;
+        float radial_k_ = 30.f;
         std::unordered_map<int, int> midpt_cache_;
-        
+
         // http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
         // ICOSAHEDRON DATA (edge length 2) 
         const float t_ = (1.f + sqrt(5.f)) / 2.f;
