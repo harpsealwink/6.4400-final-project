@@ -110,15 +110,27 @@ namespace GLOO {
                 state_ = integrator_->Integrate(system_, state_, start_time, fmin(step_size_, delta_time)); // step sizes cannot be greater than time
 
                 // update vertices
-                if (display_vertices_) {
-                    for (size_t i = 0; i < sphere_node_ptrs_.size(); i++) {
+                for (size_t i = 0; i < sphere_node_ptrs_.size(); i++) {
+                    float lower = 0.5;
+                    float eps = 0.01;
+                    if (OutOfBounds(state_.positions[i], lower, eps)) {
+                        system_.FixMass(i, true);
+                    }
+                    if (display_vertices_) {
                         sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
                     }
                 }
 
                 // update radial springs
-                if (display_radii_) {
-                    for (size_t i = 1; i < state_.positions.size(); i++) {
+                for (size_t i = 1; i < state_.positions.size(); i++) {
+                    if (system_.GetMass(i)[1]/*is_fixed*/) {
+                        float spring_length = glm::length(state_.positions[1] - state_.positions[0]);
+                        float eps = 0.01;
+                        if (spring_length > system_.GetSpring(i)[3]/*rest_length*/ + eps) {
+                            system_.FixMass(i, false);
+                        }
+                    }
+                    if (display_radii_) {
                         auto line = radial_line_ptrs_[i - 1];
                         auto line_positions = make_unique<PositionArray>();
                         auto line_indices = make_unique<IndexArray>();
@@ -238,7 +250,15 @@ namespace GLOO {
                 return search->second; // midpoint is already a vertex
             }
         }
-        
+        bool OutOfBounds(glm::vec3 position, float lower, float eps) {
+            //if ((position.x > lower_left.x + eps) && (position.x < upper_right.x - eps)    // within left-right bounds
+                //&& (position.y > lower_left.y + eps) && (position.y < upper_right.y - eps)) { // within lower-upper bounds
+            if (position.y > lower + eps) {
+                return false;
+            }
+            return true;
+        }
+
         // SCENENODE PROPERTIES
         std::shared_ptr<Material> red_material_ = std::make_shared<Material>(
             glm::vec3(1.f, 0.f, 0.f),
@@ -273,21 +293,21 @@ namespace GLOO {
 
         // DISPLAY TOGGLES 
         bool display_vertices_ = true;
-        bool display_radii_ = false;
-        bool display_mesh_ = true;
+        bool display_radii_ = true;
+        bool display_mesh_ = false;
 
         // ICOSPHERE PARAMS
         glm::vec3 start_center_ = glm::vec3(0.f, 1.f, 0.f);
         glm::vec3 start_velocity_ = glm::vec3(0.f, 0.f, 0.f);
-        bool center_fixed_ = true;
+        bool center_fixed_ = false;
         bool vertex_fixed_ = false;
         const float scale_ = 0.2;
         const int subdivisions_ = 1;
         const float center_mass_ = 0.1;
         const float vertex_mass_ = 0.1;
-        const float surface_k_ = 20.f;
+        const float surface_k_ = 100.f;
         const float radial_l_ = 1.90211 * scale_; // circumradius
-        float radial_k_ = 30.f;
+        float radial_k_ = 50.f;
         std::unordered_map<int, int> midpt_cache_;
 
         // http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html

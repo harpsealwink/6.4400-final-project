@@ -18,7 +18,7 @@ class PendulumSystem : public ParticleSystemBase {
                     velocities.push_back(glm::vec3(0.f));
                 } else {
                     positions.push_back(state.velocities[i]);
-                    float m = particle_masses_[i];
+                    float m = masses_[i];
                     velocities.push_back((1/m) * (m*glm::vec3(0.f, -9.8f, 0.f) - 0.5f*state.velocities[i])); // 1/m * (mg + -kx')
                 }
             }
@@ -27,7 +27,7 @@ class PendulumSystem : public ParticleSystemBase {
                 int i = springs_[s][0];
                 int j = springs_[s][1];
 
-                float m_i = particle_masses_[i];
+                float m_i = masses_[i];
                 float r_ij = springs_[s][2];
                 float k_ij = springs_[s][3];
                 glm::vec3 d_i = state.positions[i] - state.positions[j];
@@ -36,7 +36,7 @@ class PendulumSystem : public ParticleSystemBase {
                     velocities[i] += spring_force_i;
                 }
 
-                float m_j = particle_masses_[j];
+                float m_j = masses_[j];
                 glm::vec3 d_j = state.positions[j] - state.positions[i];
                 glm::vec3 spring_force_j = (1/m_j) * -k_ij*(glm::length(d_j)-r_ij)*(d_j/glm::length(d_j)); // 1/m * (force sum over connected particles)
                 if (!fixed_[j]) {
@@ -49,8 +49,8 @@ class PendulumSystem : public ParticleSystemBase {
 
         void AddMass(float m, bool is_fixed) {
             // adds particle of mass m (fixes particle if is_fixed=true)
+            masses_.push_back(m);
             fixed_.push_back(is_fixed);
-            particle_masses_.push_back(m);
         }
 
         void AddSpring(int i, int j, float r, float k) {
@@ -58,10 +58,21 @@ class PendulumSystem : public ParticleSystemBase {
             springs_.push_back(glm::vec4(i, j, r, k));
         }
 
+        void FixMass(int i, bool is_fixed) {
+            fixed_[i] = is_fixed;
+        }
+
+        glm::vec2 GetMass(int i) {
+            return glm::vec2(masses_[i], fixed_[i]);
+        }
+
+        glm::vec4 GetSpring(int i) {
+            return springs_[i];
+        }
 
         std::vector<glm::vec4> springs_;
         std::vector<bool> fixed_; // for each index i, true if particle i is fixed, else false
-        std::vector<float> particle_masses_; // for each index i, contains particle i's mass
+        std::vector<float> masses_; // for each index i, contains particle i's mass
 };
 }  // namespace GLOO
 
