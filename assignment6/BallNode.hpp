@@ -27,37 +27,40 @@ namespace GLOO {
             SubdivideToIcosphere();
 
             // render vertices
-            for (size_t i = 0; i < positions_.size(); i++) {
-                auto sphere_node = make_unique<SceneNode>();
-                sphere_node->CreateComponent<MaterialComponent>(red_material_);
-                sphere_node->CreateComponent<ShadingComponent>(shader_);
-                sphere_node->CreateComponent<RenderingComponent>(sphere_mesh_);
-                sphere_node_ptrs_.push_back(sphere_node.get());
-                AddChild(std::move(sphere_node));
+            if (display_vertices_) {
+                for (size_t i = 0; i < positions_.size(); i++) {
+                    auto sphere_node = make_unique<SceneNode>();
+                    sphere_node->CreateComponent<MaterialComponent>(red_material_);
+                    sphere_node->CreateComponent<ShadingComponent>(shader_);
+                    sphere_node->CreateComponent<RenderingComponent>(sphere_mesh_);
+                    sphere_node_ptrs_.push_back(sphere_node.get());
+                    AddChild(std::move(sphere_node));
+                }
             }
 
             // add radial springs
             for (size_t i = 1; i < positions_.size(); i++) {
                 system_.AddSpring(0, i, radial_l_, radial_k_);
+                if (display_radii_) {
+                    auto line_node = make_unique<SceneNode>();
+                    line_node->CreateComponent<MaterialComponent>(green_material_);
+                    line_node->CreateComponent<ShadingComponent>(line_shader_);
 
-                auto line_node = make_unique<SceneNode>();
-                line_node->CreateComponent<MaterialComponent>(green_material_);
-                line_node->CreateComponent<ShadingComponent>(line_shader_);
+                    auto positions = make_unique<PositionArray>();
+                    auto indices = make_unique<IndexArray>();
+                    auto line = std::make_shared<VertexObject>();
+                    positions->push_back(positions_[0]); // center node
+                    positions->push_back(positions_[i]);
+                    indices->push_back(0);
+                    indices->push_back(1);
+                    line->UpdatePositions(std::move(positions));
+                    line->UpdateIndices(std::move(indices));
 
-                auto positions = make_unique<PositionArray>();
-                auto indices = make_unique<IndexArray>();
-                auto line = std::make_shared<VertexObject>();
-                positions->push_back(positions_[0]); // center node
-                positions->push_back(positions_[i]);
-                indices->push_back(0);
-                indices->push_back(1);
-                line->UpdatePositions(std::move(positions));
-                line->UpdateIndices(std::move(indices));
-
-                auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
-                rc_curve.SetDrawMode(DrawMode::Lines);
-                radial_line_ptrs_.push_back(line);
-                //AddChild(std::move(line_node));
+                    auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
+                    rc_curve.SetDrawMode(DrawMode::Lines);
+                    radial_line_ptrs_.push_back(line);
+                    AddChild(std::move(line_node));
+                }
             }
 
             // add surface springs
@@ -72,29 +75,31 @@ namespace GLOO {
                 system_.AddSpring(i1, i2, glm::length(v2 - v1), surface_k_);
                 system_.AddSpring(i2, i0, glm::length(v0 - v2), surface_k_);
 
-                auto line_node = make_unique<SceneNode>();
-                line_node->CreateComponent<MaterialComponent>(blue_material_);
-                line_node->CreateComponent<ShadingComponent>(line_shader_);
+                if (display_mesh_) {
+                    auto line_node = make_unique<SceneNode>();
+                    line_node->CreateComponent<MaterialComponent>(green_material_);
+                    line_node->CreateComponent<ShadingComponent>(line_shader_);
 
-                auto positions = make_unique<PositionArray>();
-                auto indices = make_unique<IndexArray>();
-                auto line = std::make_shared<VertexObject>();
-                positions->push_back(v0);
-                positions->push_back(v1);
-                positions->push_back(v2);
-                indices->push_back(0);
-                indices->push_back(1);
-                indices->push_back(1);
-                indices->push_back(2);
-                indices->push_back(2);
-                indices->push_back(0);
-                line->UpdatePositions(std::move(positions));
-                line->UpdateIndices(std::move(indices));
+                    auto positions = make_unique<PositionArray>();
+                    auto indices = make_unique<IndexArray>();
+                    auto line = std::make_shared<VertexObject>();
+                    positions->push_back(v0);
+                    positions->push_back(v1);
+                    positions->push_back(v2);
+                    indices->push_back(0);
+                    indices->push_back(1);
+                    indices->push_back(1);
+                    indices->push_back(2);
+                    indices->push_back(2);
+                    indices->push_back(0);
+                    line->UpdatePositions(std::move(positions));
+                    line->UpdateIndices(std::move(indices));
 
-                auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
-                rc_curve.SetDrawMode(DrawMode::Lines);
-                surface_line_ptrs_.push_back(line);
-                AddChild(std::move(line_node));
+                    auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
+                    rc_curve.SetDrawMode(DrawMode::Lines);
+                    surface_line_ptrs_.push_back(line);
+                    AddChild(std::move(line_node));
+                }
             }
 
             state_ = { positions_, velocities_ };
@@ -105,39 +110,45 @@ namespace GLOO {
                 state_ = integrator_->Integrate(system_, state_, start_time, fmin(step_size_, delta_time)); // step sizes cannot be greater than time
 
                 // update vertices
-                for (size_t i = 0; i < sphere_node_ptrs_.size(); i++) {
-                    sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
+                if (display_vertices_) {
+                    for (size_t i = 0; i < sphere_node_ptrs_.size(); i++) {
+                        sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
+                    }
                 }
 
                 // update radial springs
-                for (size_t i = 1; i < state_.positions.size(); i++) {
-                    auto line = radial_line_ptrs_[i - 1];
-                    auto line_positions = make_unique<PositionArray>();
-                    auto line_indices = make_unique<IndexArray>();
-                    line_positions->push_back(state_.positions[0]);
-                    line_positions->push_back(state_.positions[i]);
-                    line_indices->push_back(0);
-                    line_indices->push_back(1);
-                    line->UpdatePositions(std::move(line_positions));
-                    line->UpdateIndices(std::move(line_indices));
+                if (display_radii_) {
+                    for (size_t i = 1; i < state_.positions.size(); i++) {
+                        auto line = radial_line_ptrs_[i - 1];
+                        auto line_positions = make_unique<PositionArray>();
+                        auto line_indices = make_unique<IndexArray>();
+                        line_positions->push_back(state_.positions[0]);
+                        line_positions->push_back(state_.positions[i]);
+                        line_indices->push_back(0);
+                        line_indices->push_back(1);
+                        line->UpdatePositions(std::move(line_positions));
+                        line->UpdateIndices(std::move(line_indices));
+                    }
                 }
 
                 // update surface springs
-                for (size_t i = 0; i < triangles_.size(); i++) {
-                    auto line = surface_line_ptrs_[i];
-                    auto line_positions = make_unique<PositionArray>();
-                    auto line_indices = make_unique<IndexArray>();
-                    line_positions->push_back(state_.positions[triangles_[i][0]]);
-                    line_positions->push_back(state_.positions[triangles_[i][1]]);
-                    line_positions->push_back(state_.positions[triangles_[i][2]]);
-                    line_indices->push_back(0);
-                    line_indices->push_back(1);
-                    line_indices->push_back(1);
-                    line_indices->push_back(2);
-                    line_indices->push_back(2);
-                    line_indices->push_back(0);
-                    line->UpdatePositions(std::move(line_positions));
-                    line->UpdateIndices(std::move(line_indices));
+                if (display_mesh_) {
+                    for (size_t i = 0; i < triangles_.size(); i++) {
+                        auto line = surface_line_ptrs_[i];
+                        auto line_positions = make_unique<PositionArray>();
+                        auto line_indices = make_unique<IndexArray>();
+                        line_positions->push_back(state_.positions[triangles_[i][0]]);
+                        line_positions->push_back(state_.positions[triangles_[i][1]]);
+                        line_positions->push_back(state_.positions[triangles_[i][2]]);
+                        line_indices->push_back(0);
+                        line_indices->push_back(1);
+                        line_indices->push_back(1);
+                        line_indices->push_back(2);
+                        line_indices->push_back(2);
+                        line_indices->push_back(0);
+                        line->UpdatePositions(std::move(line_positions));
+                        line->UpdateIndices(std::move(line_indices));
+                    }
                 }
 
                 start_time += step_size_;
@@ -227,7 +238,7 @@ namespace GLOO {
                 return search->second; // midpoint is already a vertex
             }
         }
-
+        
         // SCENENODE PROPERTIES
         std::shared_ptr<Material> red_material_ = std::make_shared<Material>(
             glm::vec3(1.f, 0.f, 0.f),
@@ -260,12 +271,17 @@ namespace GLOO {
         std::unique_ptr<IntegratorBase<PendulumSystem, ParticleState>> integrator_;
         float step_size_;
 
+        // DISPLAY TOGGLES 
+        bool display_vertices_ = true;
+        bool display_radii_ = false;
+        bool display_mesh_ = true;
+
         // ICOSPHERE PARAMS
         glm::vec3 start_center_ = glm::vec3(0.f, 1.f, 0.f);
         glm::vec3 start_velocity_ = glm::vec3(0.f, 0.f, 0.f);
         bool center_fixed_ = true;
         bool vertex_fixed_ = false;
-        const float scale_ = 0.2f;
+        const float scale_ = 0.2;
         const int subdivisions_ = 1;
         const float center_mass_ = 0.1;
         const float vertex_mass_ = 0.1;
