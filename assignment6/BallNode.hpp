@@ -25,6 +25,8 @@ namespace GLOO {
             // initialize icosphere
             InitIcosahedron();
             SubdivideToIcosphere();
+            normal_mesh_ = std::make_shared<VertexObject>();
+            ComputeNormals();
 
             // render vertices
             for (size_t i = 0; i < positions_.size(); i++) {
@@ -33,7 +35,7 @@ namespace GLOO {
                 sphere_node->CreateComponent<ShadingComponent>(shader_);
                 sphere_node->CreateComponent<RenderingComponent>(sphere_mesh_);
                 sphere_node_ptrs_.push_back(sphere_node.get());
-                AddChild(std::move(sphere_node));
+                // AddChild(std::move(sphere_node));
             }
 
             // add radial springs
@@ -57,7 +59,7 @@ namespace GLOO {
                 auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
                 rc_curve.SetDrawMode(DrawMode::Lines);
                 radial_line_ptrs_.push_back(line);
-                //AddChild(std::move(line_node));
+                // AddChild(std::move(line_node));
             }
 
             // add surface springs
@@ -94,11 +96,13 @@ namespace GLOO {
                 auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
                 rc_curve.SetDrawMode(DrawMode::Lines);
                 surface_line_ptrs_.push_back(line);
-                AddChild(std::move(line_node));
+                // AddChild(std::move(line_node));
             }
 
             state_ = { positions_, velocities_ };
         };
+
+
         void Update(double delta_time) {
             double start_time = 0.0;
             while (start_time < delta_time) {
@@ -154,6 +158,8 @@ namespace GLOO {
                 prev_released = true;
             }
         }
+
+
     private:
         void InitIcosahedron() {
             // center
@@ -227,6 +233,51 @@ namespace GLOO {
                 return search->second; // midpoint is already a vertex
             }
         }
+        void ComputeNormals() { // add surface normals to sphere  
+            auto normal_positions = make_unique<PositionArray>();
+            for (int i = 0; i < positions_.size(); i++) { // load in all positions for PositionArray
+                normal_positions->push_back(positions_[i]);
+            }
+            normal_mesh_->UpdatePositions(std::move(normal_positions));
+
+            auto normal_indicies = make_unique<IndexArray>();
+            for (glm::vec3 triangle : triangles_) { // load in all triangle indicies for IndexArray
+                normal_indicies->push_back(triangle[0]);
+                normal_indicies->push_back(triangle[1]);
+                normal_indicies->push_back(triangle[2]);
+            }
+            normal_mesh_->UpdateIndices(std::move(normal_indicies));
+
+            std::vector<glm::vec3> normal_sums; // initialize normals array
+            for (int i = 0; i < positions_.size(); i++) {
+                normal_sums.push_back(glm::vec3(0.f));
+            }
+            for (glm::vec3 triangle : triangles_) { // add to each vertex normal the normals of incident faces
+                int idx1 = triangle[0];
+                int idx2 = triangle[1];
+                int idx3 = triangle[2];
+                glm::vec3 v1 = positions_[idx2] - positions_[idx1];
+                glm::vec3 v2 = positions_[idx3] - positions_[idx1];
+                glm::vec3 normal = glm::cross(v1, v2);
+                normal_sums[idx1] += normal;
+                normal_sums[idx2] += normal;
+                normal_sums[idx3] += normal;
+            }
+            auto normals = make_unique<NormalArray>();
+            for (int i = 0; i < normal_sums.size(); i ++) {
+                normals->push_back(glm::normalize(normal_sums[i])); // normalize the sum of normals for vertex
+            }
+            normal_mesh_->UpdateNormals(std::move(normals));
+
+            // render normals
+            auto surface_node = make_unique<SceneNode>(); 
+            surface_node->CreateComponent<ShadingComponent>(shader_);
+            surface_node->CreateComponent<MaterialComponent>(red_material_);
+            surface_node->CreateComponent<RenderingComponent>(normal_mesh_);
+            // mesh_node->push_back(surface_node.get());
+            AddChild(std::move(surface_node));
+        }
+        
 
         // SCENENODE PROPERTIES
         std::shared_ptr<Material> red_material_ = std::make_shared<Material>(
@@ -255,6 +306,7 @@ namespace GLOO {
         std::vector<glm::vec3> positions_;
         std::vector<glm::vec3> velocities_;
         std::vector<glm::vec3> triangles_;
+        std::shared_ptr<VertexObject> normal_mesh_;
         ParticleState state_;
         PendulumSystem system_;
         std::unique_ptr<IntegratorBase<PendulumSystem, ParticleState>> integrator_;
@@ -264,9 +316,9 @@ namespace GLOO {
         glm::vec3 start_center_ = glm::vec3(0.f, 1.f, 0.f);
         glm::vec3 start_velocity_ = glm::vec3(0.f, 0.f, 0.f);
         bool center_fixed_ = true;
-        bool vertex_fixed_ = false;
-        const float scale_ = 0.2f;
-        const int subdivisions_ = 1;
+        bool vertex_fixed_ = true;
+        const float scale_ = 0.5f;
+        const int subdivisions_ = 3;
         const float center_mass_ = 0.1;
         const float vertex_mass_ = 0.1;
         const float surface_k_ = 20.f;
