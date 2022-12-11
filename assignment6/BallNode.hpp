@@ -29,13 +29,13 @@ namespace GLOO {
             ComputeNormals();
 
             // render vertices
-            if (display_vertices_) {
-                for (size_t i = 0; i < positions_.size(); i++) {
-                    auto sphere_node = make_unique<SceneNode>();
-                    sphere_node->CreateComponent<MaterialComponent>(red_material_);
-                    sphere_node->CreateComponent<ShadingComponent>(shader_);
-                    sphere_node->CreateComponent<RenderingComponent>(sphere_mesh_);
-                    sphere_node_ptrs_.push_back(sphere_node.get());
+            for (size_t i = 0; i < positions_.size(); i++) {
+                auto sphere_node = make_unique<SceneNode>();
+                sphere_node->CreateComponent<MaterialComponent>(red_material_);
+                sphere_node->CreateComponent<ShadingComponent>(shader_);
+                sphere_node->CreateComponent<RenderingComponent>(sphere_mesh_);
+                sphere_node_ptrs_.push_back(sphere_node.get());
+                if (display_vertices_) {
                     AddChild(std::move(sphere_node));
                 }
             }
@@ -170,22 +170,41 @@ namespace GLOO {
                 }
 
                 // update normals
-                // for (size_t i = 0; i < triangles_.size(); i++) {
-                //     auto line = surface_line_ptrs_[i];
-                //     auto line_positions = make_unique<PositionArray>();
-                //     auto line_indices = make_unique<IndexArray>();
-                //     line_positions->push_back(state_.positions[triangles_[i][0]]);
-                //     line_positions->push_back(state_.positions[triangles_[i][1]]);
-                //     line_positions->push_back(state_.positions[triangles_[i][2]]);
-                //     line_indices->push_back(0);
-                //     line_indices->push_back(1);
-                //     line_indices->push_back(1);
-                //     line_indices->push_back(2);
-                //     line_indices->push_back(2);
-                //     line_indices->push_back(0);
-                //     line->UpdatePositions(std::move(line_positions));
-                //     line->UpdateIndices(std::move(line_indices));
-                // }
+                auto normal_positions = make_unique<PositionArray>();
+                for (int i = 0; i < state_.positions.size(); i++) { 
+                    normal_positions->push_back(state_.positions[i]);
+                }
+                normal_mesh_->UpdatePositions(std::move(normal_positions));
+
+                auto normal_indicies = make_unique<IndexArray>();
+                for (glm::vec3 triangle : triangles_) { 
+                    normal_indicies->push_back(triangle[0]);
+                    normal_indicies->push_back(triangle[1]);
+                    normal_indicies->push_back(triangle[2]);
+                }
+                normal_mesh_->UpdateIndices(std::move(normal_indicies));
+
+                std::vector<glm::vec3> normal_sums; 
+                for (int i = 0; i < state_.positions.size(); i++) {
+                    normal_sums.push_back(glm::vec3(0.f));
+                }
+                for (glm::vec3 triangle : triangles_) { 
+                    int idx1 = triangle[0];
+                    int idx2 = triangle[1];
+                    int idx3 = triangle[2];
+                    glm::vec3 v1 = state_.positions[idx2] - state_.positions[idx1];
+                    glm::vec3 v2 = state_.positions[idx3] - state_.positions[idx1];
+                    glm::vec3 normal = glm::cross(v1, v2);
+                    normal_sums[idx1] += normal;
+                    normal_sums[idx2] += normal;
+                    normal_sums[idx3] += normal;
+                }
+                auto normals = make_unique<NormalArray>();
+                for (int i = 0; i < normal_sums.size(); i ++) {
+                    normals->push_back(glm::normalize(normal_sums[i])); 
+                }
+                normal_mesh_->UpdateNormals(std::move(normals));
+
 
                 start_time += step_size_;
             }
@@ -317,7 +336,7 @@ namespace GLOO {
             surface_node->CreateComponent<ShadingComponent>(shader_);
             surface_node->CreateComponent<MaterialComponent>(red_material_);
             surface_node->CreateComponent<RenderingComponent>(normal_mesh_);
-            mesh_node->push_back(surface_node.get());
+            mesh_node_ = surface_node.get();
             AddChild(std::move(surface_node));
         }
         
@@ -352,7 +371,7 @@ namespace GLOO {
         //std::vector<SceneNode*> line_node_ptrs_;
         std::vector<std::shared_ptr<VertexObject>> surface_line_ptrs_;
         std::vector<std::shared_ptr<VertexObject>> radial_line_ptrs_;
-        std::vector<SceneNode*> mesh_node[1];
+        SceneNode* mesh_node_;
 
         // SIMULATION INFO
         std::vector<glm::vec3> positions_;
@@ -365,9 +384,9 @@ namespace GLOO {
         float step_size_;
 
         // DISPLAY TOGGLES 
-        bool display_vertices_ = true;
-        bool display_radii_ = true;
-        bool display_mesh_ = true;
+        bool display_vertices_ = false;
+        bool display_radii_ = false;
+        bool display_mesh_ = false;
 
         // ICOSPHERE PARAMS
         glm::vec3 start_center_ = glm::vec3(0.f, 1.f, 0.f);
