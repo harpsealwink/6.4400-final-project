@@ -114,13 +114,13 @@ namespace GLOO {
                 state_ = integrator_->Integrate(system_, state_, start_time, fmin(step_size_, delta_time)); // step sizes cannot be greater than time
 
                 // update vertices
-                for (size_t i = 0; i < sphere_node_ptrs_.size(); i++) {
+                for (size_t i = 0; i < state_.positions.size(); i++) {
                     float lower = -1.5;
                     float eps = 0.01;
                     if (OutOfBounds(state_.positions[i], lower, eps)) {
-                        // system_.FixMass(i, true);
+                        system_.FixMass(i, true);
                         // state_.velocities[i] = glm::vec3(0.f);
-                        state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
+                        //state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
                     }
                     if (display_vertices_) {
                         sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
@@ -132,9 +132,9 @@ namespace GLOO {
                     if (system_.GetMass(i)[1]/*is_fixed*/) {
                         float spring_length = glm::length(state_.positions[1] - state_.positions[0]);
                         float eps = 0.01;
-                        // if (spring_length > system_.GetSpring(i)[3]/*rest_length*/ + eps) {
-                        //     system_.FixMass(i, false);
-                        // }
+                        if (spring_length > system_.GetSpring(i)[3]/*rest_length*/ + eps) {
+                            system_.FixMass(i, false);
+                        }
                     }
                     if (display_radii_) {
                         auto line = radial_line_ptrs_[i - 1];
@@ -326,20 +326,20 @@ namespace GLOO {
                 normal_sums[idx3] += normal;
             }
             auto normals = make_unique<NormalArray>();
-            for (int i = 0; i < normal_sums.size(); i ++) {
+            for (int i = 0; i < normal_sums.size(); i++) {
                 normals->push_back(glm::normalize(normal_sums[i])); // normalize the sum of normals for vertex
             }
             normal_mesh_->UpdateNormals(std::move(normals));
 
             // render normals
-            auto surface_node = make_unique<SceneNode>(); 
+            auto surface_node = make_unique<SceneNode>();
             surface_node->CreateComponent<ShadingComponent>(shader_);
             surface_node->CreateComponent<MaterialComponent>(red_material_);
             surface_node->CreateComponent<RenderingComponent>(normal_mesh_);
             mesh_node_ = surface_node.get();
             AddChild(std::move(surface_node));
         }
-        
+
         bool OutOfBounds(glm::vec3 position, float lower, float eps) {
             //if ((position.x > lower_left.x + eps) && (position.x < upper_right.x - eps)    // within left-right bounds
                 //&& (position.y > lower_left.y + eps) && (position.y < upper_right.y - eps)) { // within lower-upper bounds
@@ -395,11 +395,11 @@ namespace GLOO {
         bool vertex_fixed_ = false;
         const float scale_ = 0.2;
         const int subdivisions_ = 1;
-        const float center_mass_ = 3.0;
-        const float vertex_mass_ = 0.05;
-        const float surface_k_ = 300.f;
+        const float center_mass_ = 0.1;
+        const float vertex_mass_ = 0.1;
+        const float surface_k_ = 100.f;
+        const float radial_k_ = 50.f;
         const float radial_l_ = 1.90211 * scale_; // circumradius
-        float radial_k_ = 1000.f;
         std::unordered_map<int, int> midpt_cache_;
 
         // http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
