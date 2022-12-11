@@ -115,10 +115,12 @@ namespace GLOO {
 
                 // update vertices
                 for (size_t i = 0; i < sphere_node_ptrs_.size(); i++) {
-                    float lower = 0.5;
+                    float lower = 0.f;
                     float eps = 0.01;
                     if (OutOfBounds(state_.positions[i], lower, eps)) {
-                        system_.FixMass(i, true);
+                        //system_.FixMass(i, true);
+                        state_.positions[i] = glm::vec3(state_.positions[i].x, lower, state_.positions[i].z);
+                        state_.velocities[i] = glm::vec3(0.f);
                     }
                     if (display_vertices_) {
                         sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
@@ -129,10 +131,10 @@ namespace GLOO {
                 for (size_t i = 1; i < state_.positions.size(); i++) {
                     if (system_.GetMass(i)[1]/*is_fixed*/) {
                         float spring_length = glm::length(state_.positions[1] - state_.positions[0]);
-                        float eps = 0.01;
-                        if (spring_length > system_.GetSpring(i)[3]/*rest_length*/ + eps) {
-                            system_.FixMass(i, false);
-                        }
+                        float eps = 1.f;
+                        //if (spring_length > system_.GetSpring(i)[3]/*rest_length*/ - eps) {
+                        //    system_.FixMass(i, false);
+                        //}
                     }
                     if (display_radii_) {
                         auto line = radial_line_ptrs_[i - 1];
@@ -357,9 +359,9 @@ namespace GLOO {
         const int subdivisions_ = 1;
         const float center_mass_ = 0.1;
         const float vertex_mass_ = 0.1;
-        const float surface_k_ = 100.f;
+        const float surface_k_ = 50.f;
         const float radial_l_ = 1.90211 * scale_; // circumradius
-        float radial_k_ = 50.f;
+        float radial_k_ = 10.f;
         std::unordered_map<int, int> midpt_cache_;
 
         // http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
