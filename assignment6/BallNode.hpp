@@ -126,12 +126,11 @@ namespace GLOO {
                 for (size_t i = 0; i < state_.positions.size(); i++) {
                     float lower = -1.5;
                     float eps = 0.01;
-                    //if (OutOfBounds(state_.positions[i], lower, eps)) {
-
-                    //    // system_.FixMass(i, true);
-                    //    // state_.velocities[i] = glm::vec3(0.f);
-                    //    state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
-                    //}
+                    if (OutOfBounds(state_.positions[i], lower, eps)) {
+                        // system_.FixMass(i, true);
+                        // state_.velocities[i] = glm::vec3(0.f);
+                        state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
+                    }
                     if (display_vertices_) {
                         sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
                     }
@@ -374,14 +373,14 @@ namespace GLOO {
         // ICOSPHERE PARAMS
         glm::vec3 start_center_ = glm::vec3(0.f, 1.f, 0.f);
         glm::vec3 start_velocity_ = glm::vec3(0.f, 0.f, 0.f);
-        bool center_fixed_ = true;
-        bool vertex_fixed_ = true;
+        bool center_fixed_ = false;
+        bool vertex_fixed_ = false;
         const float scale_ = 0.2;
         const int subdivisions_ = 1; // _, 3
         const float center_mass_ = 3.0; // 0.1, 3.0
-        const float vertex_mass_ = 0.05; // 0.1, 0.05
-        const float surface_k_ = 300.f; // 100, 300
-        const float radial_k_ = 1000.f; // 50, 1000
+        const float vertex_mass_ = 0.5; // 0.1, 0.05
+        const float surface_k_ = 30.f; // 100, 300
+        const float radial_k_ = 10.f; // 50, 1000
         const float radial_l_ = 1.90211 * scale_; // circumradius
         std::unordered_map<int, int> midpt_cache_;
 
