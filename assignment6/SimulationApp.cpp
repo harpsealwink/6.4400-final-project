@@ -41,12 +41,12 @@ void SimulationApp::SetupScene() {
   root.CreateComponent<LightComponent>(ambient_light);
 
   auto point_light = std::make_shared<PointLight>();
-  point_light->SetDiffuseColor(glm::vec3(0.8f, 0.8f, 0.8f));
+  point_light->SetDiffuseColor(glm::vec3(1.f, 1.f, 1.f));
   point_light->SetSpecularColor(glm::vec3(1.0f, 1.0f, 1.0f));
   point_light->SetAttenuation(glm::vec3(1.0f, 0.09f, 0.032f));
   auto point_light_node = make_unique<SceneNode>();
   point_light_node->CreateComponent<LightComponent>(point_light);
-  point_light_node->GetTransform().SetPosition(glm::vec3(0.0f, 2.0f, 4.f));
+  point_light_node->GetTransform().SetPosition(glm::vec3(3.0f, 5.0f, 0.f));
   root.AddChild(std::move(point_light_node));
 
   auto ball_node = make_unique<BallNode>(integrator_type_, integration_step_);

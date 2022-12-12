@@ -29,14 +29,14 @@ namespace GLOO {
             ComputeNormals();
 
             // render vertices
-            for (size_t i = 0; i < positions_.size(); i++) {
-                auto sphere_node = make_unique<SceneNode>();
-                sphere_node->CreateComponent<MaterialComponent>(red_material_);
-                sphere_node->CreateComponent<ShadingComponent>(shader_);
-                sphere_node->CreateComponent<RenderingComponent>(sphere_mesh_);
-                sphere_node_ptrs_.push_back(sphere_node.get());
-                if (display_vertices_) {
-                    AddChild(std::move(sphere_node));
+            if (display_vertices_) {
+                for (size_t i = 0; i < positions_.size(); i++) {
+                    auto sphere_node = make_unique<SceneNode>();
+                    sphere_node->CreateComponent<MaterialComponent>(red_material_);
+                    sphere_node->CreateComponent<ShadingComponent>(shader_);
+                    sphere_node->CreateComponent<RenderingComponent>(sphere_mesh_);
+                    sphere_node_ptrs_.push_back(sphere_node.get());
+                        AddChild(std::move(sphere_node));
                 }
             }
 
@@ -118,9 +118,9 @@ namespace GLOO {
                     float lower = -1.5;
                     float eps = 0.01;
                     if (OutOfBounds(state_.positions[i], lower, eps)) {
-                        system_.FixMass(i, true);
+                        // system_.FixMass(i, true);
                         // state_.velocities[i] = glm::vec3(0.f);
-                        //state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
+                        state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
                     }
                     if (display_vertices_) {
                         sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
@@ -189,9 +189,15 @@ namespace GLOO {
                     normal_sums.push_back(glm::vec3(0.f));
                 }
                 for (glm::vec3 triangle : triangles_) { 
-                    int idx1 = triangle[0];
                     int idx2 = triangle[1];
-                    int idx3 = triangle[2];
+                    int idx1, idx3;
+                    if (subdivisions_ % 2 == 0) {
+                        idx1 = triangle[0];
+                        idx3 = triangle[2];
+                    } else {
+                        idx1 = triangle[2];
+                        idx3 = triangle[0];
+                    }
                     glm::vec3 v1 = state_.positions[idx2] - state_.positions[idx1];
                     glm::vec3 v2 = state_.positions[idx3] - state_.positions[idx1];
                     glm::vec3 normal = glm::cross(v1, v2);
@@ -261,9 +267,9 @@ namespace GLOO {
 
                     // new faces
                     new_triangles.push_back(glm::vec3(i0, i5, i3));
-                    new_triangles.push_back(glm::vec3(i1, i3, i4));
-                    new_triangles.push_back(glm::vec3(i2, i4, i5));
-                    new_triangles.push_back(glm::vec3(i3, i4, i5));
+                    new_triangles.push_back(glm::vec3(i3, i4, i1));
+                    new_triangles.push_back(glm::vec3(i5, i2, i4));
+                    new_triangles.push_back(glm::vec3(i3, i5, i4));
                 }
                 midpt_cache_.clear();
                 triangles_ = new_triangles;
@@ -315,9 +321,15 @@ namespace GLOO {
                 normal_sums.push_back(glm::vec3(0.f));
             }
             for (glm::vec3 triangle : triangles_) { // add to each vertex normal the normals of incident faces
-                int idx1 = triangle[0];
                 int idx2 = triangle[1];
-                int idx3 = triangle[2];
+                int idx1, idx3;
+                if (subdivisions_ % 2 == 0) {
+                    idx1 = triangle[0];
+                    idx3 = triangle[2];
+                } else {
+                    idx1 = triangle[2];
+                    idx3 = triangle[0];
+                }
                 glm::vec3 v1 = positions_[idx2] - positions_[idx1];
                 glm::vec3 v2 = positions_[idx3] - positions_[idx1];
                 glm::vec3 normal = glm::cross(v1, v2);
@@ -334,7 +346,7 @@ namespace GLOO {
             // render normals
             auto surface_node = make_unique<SceneNode>();
             surface_node->CreateComponent<ShadingComponent>(shader_);
-            surface_node->CreateComponent<MaterialComponent>(red_material_);
+            surface_node->CreateComponent<MaterialComponent>(white_material_);
             surface_node->CreateComponent<RenderingComponent>(normal_mesh_);
             mesh_node_ = surface_node.get();
             AddChild(std::move(surface_node));
@@ -362,6 +374,10 @@ namespace GLOO {
             glm::vec3(0.f, 0.f, 1.f),
             glm::vec3(0.f, 0.f, 1.f),
             glm::vec3(0.f, 0.f, 1.f), 20.0f);
+        std::shared_ptr<Material> white_material_ = std::make_shared<Material>(
+            glm::vec3(1.f, 0.8f, 1.f), 
+            glm::vec3(1.f, 0.8f, 1.f), 
+            glm::vec3(0.2f, 0.2f, 0.2f), 20.0f); 
         std::shared_ptr<SimpleShader> line_shader_ = std::make_shared<SimpleShader>();
         std::shared_ptr<PhongShader> shader_ = std::make_shared<PhongShader>();
         std::shared_ptr<VertexObject> sphere_mesh_ = PrimitiveFactory::CreateSphere(0.03f, 25, 25);
@@ -394,11 +410,11 @@ namespace GLOO {
         bool center_fixed_ = false;
         bool vertex_fixed_ = false;
         const float scale_ = 0.2;
-        const int subdivisions_ = 1;
-        const float center_mass_ = 0.1;
-        const float vertex_mass_ = 0.1;
-        const float surface_k_ = 100.f;
-        const float radial_k_ = 50.f;
+        const int subdivisions_ = 3;
+        const float center_mass_ = 3.0; // 0.1, 3.0
+        const float vertex_mass_ = 0.05; // 0.1, 0.05
+        const float surface_k_ = 300.f; // 100, 300
+        const float radial_k_ = 1000.f; // 50, 1000
         const float radial_l_ = 1.90211 * scale_; // circumradius
         std::unordered_map<int, int> midpt_cache_;
 
