@@ -50,6 +50,25 @@ void SimulationApp::SetupScene() {
   root.AddChild(std::move(point_light_node));
 
   auto ball_node = make_unique<BallNode>(integrator_type_, integration_step_);
+  ball_node_ptr_ = ball_node.get();
   root.AddChild(std::move(ball_node));
+
+  float *height = &ball_height_;
+  ball_node_ptr_->LinkHeightControl(height);
+  ball_node_ptr_->OnHeightChanged();
+}
+
+void SimulationApp::DrawGUI() {
+  bool modified = false;
+  ImGui::Begin("Controls");
+  ImGui::Text("Ball Parameters");
+  ImGui::PushID(0);
+  modified |= ImGui::SliderFloat("height", &ball_height_, 0, 6);
+  ImGui::PopID();
+  ImGui::End();
+
+  if (modified) {
+    ball_node_ptr_->OnHeightChanged();
+  }
 }
 }  // namespace GLOO
