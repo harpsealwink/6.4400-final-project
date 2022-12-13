@@ -112,11 +112,10 @@ namespace GLOO {
                 surface_node->CreateComponent<ShadingComponent>(shader_);
                 surface_node->CreateComponent<MaterialComponent>(white_material_);
                 surface_node->CreateComponent<RenderingComponent>(normal_mesh_);
-                //mesh_node_ = surface_node.get();
                 AddChild(std::move(surface_node));
             }
 
-            state_ = { positions_, velocities_ };
+            state_ = {positions_, velocities_};
         };
 
 
@@ -193,46 +192,42 @@ namespace GLOO {
                     }
 
                     // update normals
-                    auto normal_positions = make_unique<PositionArray>();
-                    for (int i = 0; i < state_.positions.size(); i++) { 
-                        normal_positions->push_back(state_.positions[i]);
-                    }
-                    normal_mesh_->UpdatePositions(std::move(normal_positions));
-
-                    auto normal_indicies = make_unique<IndexArray>();
-                    for (glm::vec3 triangle : triangles_) { 
-                        normal_indicies->push_back(triangle[0]);
-                        normal_indicies->push_back(triangle[1]);
-                        normal_indicies->push_back(triangle[2]);
-                    }
-                    normal_mesh_->UpdateIndices(std::move(normal_indicies));
-
-                    std::vector<glm::vec3> normal_sums; 
-                    for (int i = 0; i < state_.positions.size(); i++) {
-                        normal_sums.push_back(glm::vec3(0.f));
-                    }
-                    for (glm::vec3 triangle : triangles_) { 
-                        int idx2 = triangle[1];
-                        int idx1, idx3;
-                        if (subdivisions_ % 2 == 0) {
-                            idx1 = triangle[0];
-                            idx3 = triangle[2];
-                        } else {
-                            idx1 = triangle[2];
-                            idx3 = triangle[0];
+                    if (display_surface_) {
+                        auto normal_positions = make_unique<PositionArray>();
+                        for (int i = 0; i < state_.positions.size(); i++) { 
+                            normal_positions->push_back(state_.positions[i]);
                         }
-                        glm::vec3 v1 = state_.positions[idx2] - state_.positions[idx1];
-                        glm::vec3 v2 = state_.positions[idx3] - state_.positions[idx1];
-                        glm::vec3 normal = glm::cross(v1, v2);
-                        normal_sums[idx1] += normal;
-                        normal_sums[idx2] += normal;
-                        normal_sums[idx3] += normal;
+                        normal_mesh_->UpdatePositions(std::move(normal_positions));
+
+                        auto normal_indicies = make_unique<IndexArray>();
+                        for (glm::vec3 triangle : triangles_) { 
+                            normal_indicies->push_back(triangle[0]);
+                            normal_indicies->push_back(triangle[1]);
+                            normal_indicies->push_back(triangle[2]);
+                        }
+                        normal_mesh_->UpdateIndices(std::move(normal_indicies));
+
+                        std::vector<glm::vec3> normal_sums; 
+                        for (int i = 0; i < state_.positions.size(); i++) {
+                            normal_sums.push_back(glm::vec3(0.f));
+                        }
+                        for (glm::vec3 triangle : triangles_) { 
+                            int idx1 = triangle[0];
+                            int idx2 = triangle[1];
+                            int idx3 = triangle[2];
+                            glm::vec3 v1 = state_.positions[idx2] - state_.positions[idx1];
+                            glm::vec3 v2 = state_.positions[idx3] - state_.positions[idx1];
+                            glm::vec3 normal = glm::cross(v1, v2);
+                            normal_sums[idx1] += normal;
+                            normal_sums[idx2] += normal;
+                            normal_sums[idx3] += normal;
+                        }
+                        auto normals = make_unique<NormalArray>();
+                        for (int i = 0; i < normal_sums.size(); i ++) {
+                            normals->push_back(glm::normalize(normal_sums[i])); 
+                        }
+                        normal_mesh_->UpdateNormals(std::move(normals));
                     }
-                    auto normals = make_unique<NormalArray>();
-                    for (int i = 0; i < normal_sums.size(); i ++) {
-                        normals->push_back(glm::normalize(normal_sums[i])); 
-                    }
-                    normal_mesh_->UpdateNormals(std::move(normals));
 
 
                     start_time += step_size_;
@@ -344,16 +339,7 @@ namespace GLOO {
                 // add the normals of incident faces to each vertex normal
                 int idx1 = triangle[0];
                 int idx2 = triangle[1];
-                int idx3 = triangle[2]; // (I think I fixed the underlying issue -grace)
-                /*int idx1, idx3;
-                if (subdivisions_ % 2 == 0) {
-                    idx1 = triangle[0];
-                    idx3 = triangle[2];
-                }
-                else {
-                    idx1 = triangle[2];
-                    idx3 = triangle[0];
-                }*/
+                int idx3 = triangle[2];
                 glm::vec3 v1 = positions_[idx2] - positions_[idx1];
                 glm::vec3 v2 = positions_[idx3] - positions_[idx1];
                 glm::vec3 normal = glm::cross(v1, v2);
@@ -421,7 +407,7 @@ namespace GLOO {
         bool display_vertices_ = true;
         bool display_radii_ = true;
         bool display_mesh_ = true;
-        bool display_surface_ = true;
+        bool display_surface_ = false;
 
         // ICOSPHERE PARAMS
         glm::vec3 start_center_ = glm::vec3(0.f, 1.f, 0.f);
@@ -432,8 +418,8 @@ namespace GLOO {
         const int subdivisions_ = 1;
         const float center_mass_ = 3.0; // 0.1, 3.0
         const float vertex_mass_ = 0.5; // 0.1, 0.05
-        const float surface_k_ = 30.f; // 100, 300
-        const float radial_k_ = 10.f; // 50, 1000
+        const float surface_k_ = 10.f; // 100, 300
+        const float radial_k_ = 30.f; // 50, 1000
         const float radial_l_ = 1.90211 * scale_; // circumradius
         std::unordered_map<int, int> midpt_cache_;
 
