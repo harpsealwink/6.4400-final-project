@@ -15,6 +15,7 @@
 #include "gloo/debug/AxisNode.hpp"
 #include "gloo/debug/PrimitiveFactory.hpp"
 #include "BallNode.hpp"
+#include "GroundNode.hpp"
 
 
 namespace GLOO {
@@ -54,8 +55,13 @@ void SimulationApp::SetupScene() {
   root.AddChild(std::move(ball_node));
 
   float *height = &ball_height_;
-  ball_node_ptr_->LinkHeightControl(height);
-  ball_node_ptr_->OnHeightChanged();
+  float *x = &ball_x_;
+  float *z = &ball_z_;
+  ball_node_ptr_->LinkControl(height, x, z);
+  ball_node_ptr_->OnParamsChanged();
+
+  auto ground_node = make_unique<GroundNode>();
+  root.AddChild(std::move(ground_node));
 }
 
 void SimulationApp::DrawGUI() {
@@ -63,12 +69,18 @@ void SimulationApp::DrawGUI() {
   ImGui::Begin("Controls");
   ImGui::Text("Ball Parameters");
   ImGui::PushID(0);
-  modified |= ImGui::SliderFloat("height", &ball_height_, 0, 6);
+  modified |= ImGui::SliderFloat("y (height)", &ball_height_, 0.0, 6);
+  ImGui::PopID();
+  ImGui::PushID(1);
+  modified |= ImGui::SliderFloat("x", &ball_x_, -10, 10);
+  ImGui::PopID();
+  ImGui::PushID(2);
+  modified |= ImGui::SliderFloat("z", &ball_z_, -10, 10);
   ImGui::PopID();
   ImGui::End();
 
   if (modified) {
-    ball_node_ptr_->OnHeightChanged();
+    ball_node_ptr_->OnParamsChanged();
   }
 }
 }  // namespace GLOO

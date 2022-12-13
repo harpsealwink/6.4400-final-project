@@ -11,6 +11,7 @@
 #include "gloo/shaders/PhongShader.hpp"
 #include "gloo/shaders/SimpleShader.hpp"
 #include "gloo/InputManager.hpp"
+#include "GroundNode.hpp"
 #include <cstdlib>
 #include <glm/gtx/string_cast.hpp>
 
@@ -24,19 +25,6 @@ namespace GLOO {
 
             integrator_ = IntegratorFactory::CreateIntegrator<PendulumSystem, ParticleState>(integrator_type);
             step_size_ = integration_step;
-        };
-
-        void SetUp() {
-            // reset state by clearing all elements
-            positions_.clear();
-            velocities_.clear();
-            triangles_.clear();
-            system_.masses_.clear();
-            system_.fixed_.clear();
-            system_.springs_.clear();
-            sphere_node_ptrs_.clear();
-            surface_line_ptrs_.clear();
-            radial_line_ptrs_.clear();
 
             // initialize icosphere
             InitIcosahedron();
@@ -129,6 +117,22 @@ namespace GLOO {
             }
 
             state_ = {positions_, velocities_};
+
+
+            // make other objects (for collision purposes)
+            auto ground_node = make_unique<GroundNode>();
+            ground_ptr_ = ground_node.get();
+        };
+
+        void Reset() {
+            // reset state by clearing elements
+            positions_.clear();
+            velocities_.clear();
+            triangles_.clear();
+
+            InitIcosahedron();
+            SubdivideToIcosphere();
+            state_ = { positions_, velocities_ };
         }
 
 
@@ -153,9 +157,9 @@ namespace GLOO {
 
                 // update vertices
                 for (size_t i = 0; i < state_.positions.size(); i++) {
-                    float lower = -1.5;
-                    float eps = 0.01;
-                    if (OutOfBounds(state_.positions[i], lower, eps)) {
+                    // float lower = 0.0;
+                    // float eps = 0.01;
+                    if (ground_ptr_->InBounds(state_.positions[i])) {
                         // system_.FixMass(i, true);
                         // state_.velocities[i] = glm::vec3(0.f);
                         state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
@@ -263,12 +267,14 @@ namespace GLOO {
 
 
         // GUI Functions
-        void LinkHeightControl(float* &height) {
+        void LinkControl(float* &height, float* &x, float* &z) {
             linked_height_ = height;
+            linked_x_ = x;
+            linked_z_ = z;
         }
-        void OnHeightChanged() {
-            start_center_ = glm::vec3(0.f, *linked_height_, 0.f);
-            SetUp();
+        void OnParamsChanged() {
+            start_center_ = glm::vec3(*linked_x_, *linked_height_, *linked_z_);
+            Reset();
         }
 
 
@@ -492,6 +498,11 @@ namespace GLOO {
         // UI Controls
         bool drop_ball_;
         float* linked_height_;
+        float* linked_x_;
+        float* linked_z_;
+
+        // other objects
+        GroundNode* ground_ptr_;
     };
 } // namespace GLOO
 

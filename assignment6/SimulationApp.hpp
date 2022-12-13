@@ -25,6 +25,8 @@ class SimulationApp : public Application {
     // GUI stuff
     BallNode* ball_node_ptr_;
     float ball_height_ = 1.f;
+    float ball_x_ = 0.f;
+    float ball_z_ = 0.f;
 };
 }  // namespace GLOO
 
