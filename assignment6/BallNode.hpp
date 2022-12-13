@@ -144,8 +144,8 @@ namespace GLOO {
                             // state_.velocities[i] = glm::vec3(0.f);
                             glm::vec3 p = state_.positions[i];
                             glm::vec3 v = state_.velocities[i];
-                            state_.positions[i] = glm::vec3(p.x, lower, p.z);
-                            state_.velocities[i] = glm::vec3(v.x, 5.f, v.z);
+                            // state_.positions[i] = glm::vec3(p.x, lower, p.z);
+                            state_.velocities[i] = glm::vec3(v.x, 0.f, v.z);
                         }
                         if (display_vertices_) {
                             sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
@@ -439,12 +439,12 @@ namespace GLOO {
         bool center_fixed_ = false;
         bool vertex_fixed_ = false;
         const float scale_ = 0.2;
-        const int subdivisions_ = 2;
-        const int surface_layers_ = 3; // must have 1 <= surface_layers_ <= subdivisions_ + 1
-        const float center_mass_ = 0.3; 
-        const float vertex_mass_ = 1.f; 
-        const float surface_k_ = 5.f;
-        const float radial_k_ = 20.f; 
+        const int subdivisions_ = 3;
+        const int surface_layers_ = 1; // must have 1 <= surface_layers_ <= subdivisions_ + 1
+        const float center_mass_ = 3.0; 
+        const float vertex_mass_ = 0.05; 
+        const float surface_k_ = 10.f;
+        const float radial_k_ = 100.f; 
         const float radial_l_ = 1.90211 * scale_; // circumradius
         std::unordered_map<int, int> midpt_cache_;
 
