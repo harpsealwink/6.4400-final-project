@@ -11,6 +11,7 @@
 #include "gloo/shaders/PhongShader.hpp"
 #include "gloo/shaders/SimpleShader.hpp"
 #include "gloo/InputManager.hpp"
+#include "GroundNode.hpp"
 #include <cstdlib>
 #include <glm/gtx/string_cast.hpp>
 
@@ -115,7 +116,25 @@ namespace GLOO {
                 surface_node->CreateComponent<RenderingComponent>(normal_mesh_);
                 AddChild(std::move(surface_node));
             }
+
+            //state_ = {positions_, velocities_};
+
+
+            // make other objects (for collision purposes)
+            auto ground_node = make_unique<GroundNode>();
+            ground_ptr_ = ground_node.get();
         };
+
+        void Reset() {
+            // reset state by clearing elements
+            positions_.clear();
+            velocities_.clear();
+            triangles_.clear();
+
+            InitIcosahedron();
+            SubdivideToIcosphere();
+            state_ = { positions_, velocities_ };
+        }
 
 
         void Update(double delta_time) {
@@ -130,27 +149,27 @@ namespace GLOO {
                 prev_released_d = true;
             }
 
-            if (drop_ball_) {
-                double start_time = 0.0;
-                while (start_time < delta_time) {
-                    state_ = integrator_->Integrate(system_, state_, start_time, fmin(step_size_, delta_time)); // step sizes cannot be greater than time
+            double start_time = 0.0;
+            while (start_time < delta_time) {
+                state_ = integrator_->Integrate(system_, state_, start_time, fmin(step_size_, delta_time)); // step sizes cannot be greater than time
 
-                    // update vertices
-                    for (size_t i = 0; i < state_.positions.size(); i++) {
-                        float lower = -1.5;
-                        float eps = 0.01;
-                        if (OutOfBounds(state_.positions[i], lower, eps)) {
-                            // system_.FixMass(i, true);
-                            // state_.velocities[i] = glm::vec3(0.f);
-                            glm::vec3 p = state_.positions[i];
-                            glm::vec3 v = state_.velocities[i];
-                            state_.positions[i] = glm::vec3(p.x, lower, p.z);
-                            state_.velocities[i] = glm::vec3(v.x, 0.f, v.z);
-                        }
-                        if (display_vertices_) {
-                            sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
-                        }
+                if (!drop_ball_) {
+                    state_.velocities = velocities_;
+                }
+
+                // update vertices
+                for (size_t i = 0; i < state_.positions.size(); i++) {
+                    // float lower = 0.0;
+                    // float eps = 0.01;
+                    if (ground_ptr_->InBounds(state_.positions[i])) {
+                        // system_.FixMass(i, true);
+                        // state_.velocities[i] = glm::vec3(0.f);
+                        state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
                     }
+                    if (display_vertices_) {
+                        sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
+                    }
+                }
 
                     // update radial springs
                     for (size_t i = 1; i < state_.positions.size(); i++) {
@@ -205,13 +224,25 @@ namespace GLOO {
             if (InputManager::GetInstance().IsKeyPressed('R')) {
                 if (prev_released) {
                     drop_ball_ = false;
-                    // state_ = { positions_, velocities_ };
+                    state_ = { positions_, velocities_ };
                 }
                 prev_released = false;
             }
             else {
                 prev_released = true;
             }
+        }
+
+
+        // GUI Functions
+        void LinkControl(float* &height, float* &x, float* &z) {
+            linked_height_ = height;
+            linked_x_ = x;
+            linked_z_ = z;
+        }
+        void OnParamsChanged() {
+            start_center_ = glm::vec3(*linked_x_, *linked_height_, *linked_z_);
+            Reset();
         }
 
 
@@ -414,12 +445,12 @@ namespace GLOO {
         bool center_fixed_ = false;
         bool vertex_fixed_ = false;
         const float scale_ = 0.2;
-        const int subdivisions_ = 1;
+        const int subdivisions_ = 3;
         const int surface_layers_ = 1; // must have 1 <= surface_layers_ <= subdivisions_ + 1
-        const float center_mass_ = 0.3;
-        const float vertex_mass_ = 1.f;
-        const float surface_k_ = 50.f;
-        const float radial_k_ = 0.f;
+        const float center_mass_ = 3.0; 
+        const float vertex_mass_ = 0.05; 
+        const float surface_k_ = 10.f;
+        const float radial_k_ = 100.f; 
         const float radial_l_ = 1.90211 * scale_; // circumradius
         std::unordered_map<int, int> midpt_cache_;
 
@@ -466,6 +497,12 @@ namespace GLOO {
 
         // UI Controls
         bool drop_ball_;
+        float* linked_height_;
+        float* linked_x_;
+        float* linked_z_;
+
+        // other objects
+        GroundNode* ground_ptr_;
     };
 } // namespace GLOO
 
