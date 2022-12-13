@@ -67,7 +67,34 @@ namespace GLOO {
                     AddChild(std::move(line_node));
                 }
             }
-            
+
+            // add chordal springs
+            for (size_t i = 1; i < positions_.size(); i++) {
+                for (size_t j = 1; j < i; j++) {
+                    system_.AddSpring(i, j, glm::length(positions_[i] - positions_[j]), chordal_k_);
+                    if (display_chords_) {
+                        auto line_node = make_unique<SceneNode>();
+                        line_node->CreateComponent<MaterialComponent>(green_material_);
+                        line_node->CreateComponent<ShadingComponent>(line_shader_);
+
+                        auto positions = make_unique<PositionArray>();
+                        auto indices = make_unique<IndexArray>();
+                        auto line = std::make_shared<VertexObject>();
+                        positions->push_back(positions_[i]); // center node
+                        positions->push_back(positions_[j]);
+                        indices->push_back(0);
+                        indices->push_back(1);
+                        line->UpdatePositions(std::move(positions));
+                        line->UpdateIndices(std::move(indices));
+
+                        auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
+                        rc_curve.SetDrawMode(DrawMode::Lines);
+                        chordal_line_ptrs_.push_back(line);
+                        AddChild(std::move(line_node));
+                    }
+                }
+            }
+
             // add surface springs
             for (size_t i = 0; i < triangles_.size(); i++) {
                 int i0 = triangles_[i][0];
@@ -117,9 +144,6 @@ namespace GLOO {
                 AddChild(std::move(surface_node));
             }
 
-            //state_ = {positions_, velocities_};
-
-
             // make other objects (for collision purposes)
             auto ground_node = make_unique<GroundNode>();
             ground_ptr_ = ground_node.get();
@@ -162,8 +186,6 @@ namespace GLOO {
                     // float lower = 0.0;
                     float eps = 0.01;
                     if (ground_ptr_->InBounds(state_.positions[i], eps)) {
-                        // system_.FixMass(i, true);
-                        // state_.velocities[i] = glm::vec3(0.f);
                         state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
                     }
                     if (display_vertices_) {
@@ -171,50 +193,48 @@ namespace GLOO {
                     }
                 }
 
-                    // update radial springs
+                // update radial springs
+                if (display_radii_) {
                     for (size_t i = 1; i < state_.positions.size(); i++) {
-                        if (system_.GetMass(i)[1]/*is_fixed*/) {
-                            float spring_length = glm::length(state_.positions[1] - state_.positions[0]);
-                            float eps = 0.01;
-                            if (spring_length > system_.GetSpring(i)[3]/*rest_length*/ + eps) {
-                                system_.FixMass(i, false);
-                            }
-                        }
-                        if (display_radii_) {
-                            auto line = radial_line_ptrs_[i - 1];
+                        auto line = radial_line_ptrs_[i - 1];
+                        auto line_positions = make_unique<PositionArray>();
+                        auto line_indices = make_unique<IndexArray>();
+                        line_positions->push_back(state_.positions[0]);
+                        line_positions->push_back(state_.positions[i]);
+                        line->UpdatePositions(std::move(line_positions));
+                    }
+                }
+
+                // update chordal springs
+                if (display_chords_) {
+                    for (size_t i = 1; i < state_.positions.size(); i++) {
+                        for (size_t j = i; j < i; j++) {
+                            auto line = chordal_line_ptrs_[i - 1];
                             auto line_positions = make_unique<PositionArray>();
                             auto line_indices = make_unique<IndexArray>();
                             line_positions->push_back(state_.positions[0]);
                             line_positions->push_back(state_.positions[i]);
-                            //line_indices->push_back(0);
-                            //line_indices->push_back(1);
                             line->UpdatePositions(std::move(line_positions));
-                            //line->UpdateIndices(std::move(line_indices));
                         }
                     }
+                }
 
-                    // update surface springs
-                    if (display_mesh_) {
-                        for (size_t i = 0; i < triangles_.size(); i++) {
-                            auto line = surface_line_ptrs_[i];
-                            auto line_positions = make_unique<PositionArray>();
-                            auto line_indices = make_unique<IndexArray>();
-                            line_positions->push_back(state_.positions[triangles_[i][0]]);
-                            line_positions->push_back(state_.positions[triangles_[i][1]]);
-                            line_positions->push_back(state_.positions[triangles_[i][2]]);
-                            //line_indices->push_back(0);
-                            //line_indices->push_back(1);
-                            //line_indices->push_back(1);
-                            //line_indices->push_back(2);
-                            //line_indices->push_back(2);
-                            //line_indices->push_back(0);
-                            line->UpdatePositions(std::move(line_positions));
-                            //line->UpdateIndices(std::move(line_indices));
-                        }
+
+                // update surface springs
+                if (display_mesh_) {
+                    for (size_t i = 0; i < triangles_.size(); i++) {
+                        auto line = surface_line_ptrs_[i];
+                        auto line_positions = make_unique<PositionArray>();
+                        auto line_indices = make_unique<IndexArray>();
+                        line_positions->push_back(state_.positions[triangles_[i][0]]);
+                        line_positions->push_back(state_.positions[triangles_[i][1]]);
+                        line_positions->push_back(state_.positions[triangles_[i][2]]);
+                        line->UpdatePositions(std::move(line_positions));
                     }
+                }
 
-                    // update normals
-                    ComputeNormals();
+                // update normals
+                ComputeNormals();
 
                 start_time += step_size_;
             }
@@ -234,7 +254,7 @@ namespace GLOO {
 
 
         // GUI Functions
-        void LinkControl(float* &height, float* &x, float* &z) {
+        void LinkControl(float*& height, float*& x, float*& z) {
             linked_height_ = height;
             linked_x_ = x;
             linked_z_ = z;
@@ -418,8 +438,8 @@ namespace GLOO {
 
         // SCENENODE POINTERS
         std::vector<SceneNode*> sphere_node_ptrs_;
-        //std::vector<SceneNode*> line_node_ptrs_;
         std::vector<std::shared_ptr<VertexObject>> surface_line_ptrs_;
+        std::vector<std::shared_ptr<VertexObject>> chordal_line_ptrs_;
         std::vector<std::shared_ptr<VertexObject>> radial_line_ptrs_;
         //SceneNode* mesh_node_;
 
@@ -434,9 +454,10 @@ namespace GLOO {
 
         // DISPLAY TOGGLES 
         bool display_vertices_ = false;
+        bool display_chords_ = true;
         bool display_radii_ = false;
         bool display_mesh_ = false;
-        bool display_surface_ = true;
+        bool display_surface_ = false;
 
         // ICOSPHERE PARAMS
         glm::vec3 start_center_ = glm::vec3(0.f, 1.f, 0.f);
@@ -446,10 +467,11 @@ namespace GLOO {
         const float scale_ = 0.2;
         const int subdivisions_ = 3;
         const int surface_layers_ = 1; // must have 1 <= surface_layers_ <= subdivisions_ + 1
-        const float center_mass_ = 0.01f; 
-        const float vertex_mass_ = 0.0001; 
+        const float center_mass_ = 0.01f;
+        const float vertex_mass_ = 0.0001;
         const float surface_k_ = 30.f;
-        const float radial_k_ = 0.0f; 
+        const float chordal_k_ = 10.0f;
+        const float radial_k_ = 0.0f;
         const float radial_l_ = 1.90211 * scale_; // circumradius
         std::unordered_map<int, int> midpt_cache_;
 
