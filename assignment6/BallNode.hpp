@@ -120,14 +120,14 @@ namespace GLOO {
 
 
         void Update(double delta_time) {
-            static bool prev_released = true;
-            if (InputManager::GetInstance().IsKeyPressed('R')) {
-                if (prev_released) {
+            static bool prev_released_d = true;
+            if (InputManager::GetInstance().IsKeyPressed('D')) {
+                if (prev_released_d) {
                     drop_ball_ = true;
                 }
-                prev_released = false;
+                prev_released_d = false;
             } else {
-                prev_released = true;
+                prev_released_d = true;
             }
 
             if (drop_ball_) {
@@ -235,16 +235,17 @@ namespace GLOO {
                 }
             }
 
-            // static bool prev_released = true;
-            // if (InputManager::GetInstance().IsKeyPressed('R')) {
-            //     if (prev_released) {
-            //         state_ = { positions_, velocities_ };
-            //     }
-            //     prev_released = false;
-            // }
-            // else {
-            //     prev_released = true;
-            // }
+            static bool prev_released = true;
+            if (InputManager::GetInstance().IsKeyPressed('R')) {
+                if (prev_released) {
+                    drop_ball_ = false;
+                    // state_ = { positions_, velocities_ };
+                }
+                prev_released = false;
+            }
+            else {
+                prev_released = true;
+            }
         }
 
 
@@ -407,8 +408,8 @@ namespace GLOO {
         // DISPLAY TOGGLES 
         bool display_vertices_ = false;
         bool display_radii_ = false;
-        bool display_mesh_ = true;
-        bool display_surface_ = false;
+        bool display_mesh_ = false;
+        bool display_surface_ = true;
 
         // ICOSPHERE PARAMS
         glm::vec3 start_center_ = glm::vec3(0.f, 1.f, 0.f);
@@ -417,10 +418,10 @@ namespace GLOO {
         bool vertex_fixed_ = false;
         const float scale_ = 0.2;
         const int subdivisions_ = 1;
-        const float center_mass_ = 3.0; // 0.1, 3.0
-        const float vertex_mass_ = 0.5; // 0.1, 0.05
-        const float surface_k_ = 10.f; // 100, 300
-        const float radial_k_ = 30.f; // 50, 1000
+        const float center_mass_ = 0.3; 
+        const float vertex_mass_ = 0.01; 
+        const float surface_k_ = 30.f;
+        const float radial_k_ = 100.f; 
         const float radial_l_ = 1.90211 * scale_; // circumradius
         std::unordered_map<int, int> midpt_cache_;
 

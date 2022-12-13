@@ -19,7 +19,7 @@ class PendulumSystem : public ParticleSystemBase {
                 } else {
                     positions.push_back(state.velocities[i]);
                     float m = masses_[i];
-                    velocities.push_back((1/m) * (m*glm::vec3(0.f, -9.8f, 0.f) - 0.1f*state.velocities[i])); // 1/m * (mg + -kx')
+                    velocities.push_back((1/m) * (m*glm::vec3(0.f, -9.8f, 0.f) - 0.01f*state.velocities[i])); // 1/m * (mg + -kx')
                 }
             }
 
