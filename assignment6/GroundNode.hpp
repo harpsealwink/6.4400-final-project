@@ -46,10 +46,10 @@ namespace GLOO {
             AddChild(std::move(surface_node));
         }
 
-        bool InBounds(glm::vec3 position) {
-            if (position.y < height_) {
-                if (position.x > left_edge_ && position.x < right_edge_) {
-                    if (position.z > back_edge_ && position.z < front_edge_) {
+        bool InBounds(glm::vec3 position, float eps) {
+            if (position.y+eps < height_) {
+                if (position.x+eps > left_edge_ && position.x+eps < right_edge_) {
+                    if (position.z+eps > back_edge_ && position.z+eps < front_edge_) {
                         return true;
                     }
                 }

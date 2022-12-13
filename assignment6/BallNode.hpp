@@ -160,8 +160,8 @@ namespace GLOO {
                 // update vertices
                 for (size_t i = 0; i < state_.positions.size(); i++) {
                     // float lower = 0.0;
-                    // float eps = 0.01;
-                    if (ground_ptr_->InBounds(state_.positions[i])) {
+                    float eps = 0.01;
+                    if (ground_ptr_->InBounds(state_.positions[i], eps)) {
                         // system_.FixMass(i, true);
                         // state_.velocities[i] = glm::vec3(0.f);
                         state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
@@ -433,10 +433,10 @@ namespace GLOO {
         float step_size_;
 
         // DISPLAY TOGGLES 
-        bool display_vertices_ = true;
-        bool display_radii_ = true;
+        bool display_vertices_ = false;
+        bool display_radii_ = false;
         bool display_mesh_ = false;
-        bool display_surface_ = false;
+        bool display_surface_ = true;
 
         // ICOSPHERE PARAMS
         glm::vec3 start_center_ = glm::vec3(0.f, 1.f, 0.f);
@@ -446,10 +446,10 @@ namespace GLOO {
         const float scale_ = 0.2;
         const int subdivisions_ = 3;
         const int surface_layers_ = 1; // must have 1 <= surface_layers_ <= subdivisions_ + 1
-        const float center_mass_ = 3.0; 
-        const float vertex_mass_ = 0.05; 
-        const float surface_k_ = 10.f;
-        const float radial_k_ = 100.f; 
+        const float center_mass_ = 0.01f; 
+        const float vertex_mass_ = 0.0001; 
+        const float surface_k_ = 30.f;
+        const float radial_k_ = 0.0f; 
         const float radial_l_ = 1.90211 * scale_; // circumradius
         std::unordered_map<int, int> midpt_cache_;
 

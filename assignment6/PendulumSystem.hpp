@@ -20,9 +20,9 @@ namespace GLOO {
                 else {
                     positions.push_back(state.velocities[i]);
                     float m = masses_[i];
-                    glm::vec3 drag_force = -b_ * state.velocities[i];
-                    glm::vec3 pressure_force = normals_[i] * nRT_ / volume_; // PV = nRT --> F = A*P = A*nRT/V
-                    velocities.push_back(g_ + (drag_force + pressure_force)/m); // 1/m * (mg + -kx')
+                    
+                    glm::vec3 pressure_force = normals_[i]/2.f * nRT_ / volume_; // PV = nRT --> F = A*P = A*nRT/V
+                    velocities.push_back(g_ + (pressure_force)/m); // 1/m * (mg + -kx')
                 }
             }
 
@@ -42,8 +42,9 @@ namespace GLOO {
                 float m_j = masses_[j];
                 glm::vec3 d_j = state.positions[j] - state.positions[i];
                 glm::vec3 spring_force_j = (1 / m_j) * -k_ij * (glm::length(d_j) - r_ij) * (d_j / glm::length(d_j)); // 1/m * (force sum over connected particles)
+                glm::vec3 drag_force = -b_ * state.velocities[i];
                 if (!fixed_[j]) {
-                    velocities[j] += spring_force_j;
+                    velocities[j] += spring_force_j + drag_force;
                 }
             }
             
@@ -93,8 +94,8 @@ namespace GLOO {
         std::vector<glm::vec3> normals_;
         float volume_;
         const glm::vec3 g_ = glm::vec3(0.f, -9.8f, 0.f);
-        const float b_ = 0.01f; // drag constant
-        const float nRT_ = .0f; // pressure constant
+        const float b_ = 1.0f; // drag constant
+        const float nRT_ = 2.0f; // pressure constant
     };
 }  // namespace GLOO
 
