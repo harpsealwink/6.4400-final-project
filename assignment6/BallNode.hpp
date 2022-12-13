@@ -11,6 +11,7 @@
 #include "gloo/shaders/PhongShader.hpp"
 #include "gloo/shaders/SimpleShader.hpp"
 #include "gloo/InputManager.hpp"
+#include "GroundNode.hpp"
 #include <cstdlib>
 #include <glm/gtx/string_cast.hpp>
 
@@ -116,7 +117,23 @@ namespace GLOO {
             }
 
             state_ = {positions_, velocities_};
+
+
+            // make other objects (for collision purposes)
+            auto ground_node = make_unique<GroundNode>();
+            ground_ptr_ = ground_node.get();
         };
+
+        void Reset() {
+            // reset state by clearing elements
+            positions_.clear();
+            velocities_.clear();
+            triangles_.clear();
+
+            InitIcosahedron();
+            SubdivideToIcosphere();
+            state_ = { positions_, velocities_ };
+        }
 
 
         void Update(double delta_time) {
@@ -130,107 +147,107 @@ namespace GLOO {
                 prev_released_d = true;
             }
 
-            if (drop_ball_) {
-                double start_time = 0.0;
-                while (start_time < delta_time) {
-                    state_ = integrator_->Integrate(system_, state_, start_time, fmin(step_size_, delta_time)); // step sizes cannot be greater than time
+            double start_time = 0.0;
+            while (start_time < delta_time) {
+                state_ = integrator_->Integrate(system_, state_, start_time, fmin(step_size_, delta_time)); // step sizes cannot be greater than time
 
-                    // update vertices
-                    for (size_t i = 0; i < state_.positions.size(); i++) {
-                        float lower = -1.5;
+                if (!drop_ball_) {
+                    state_.velocities = velocities_;
+                }
+
+                // update vertices
+                for (size_t i = 0; i < state_.positions.size(); i++) {
+                    // float lower = 0.0;
+                    // float eps = 0.01;
+                    if (ground_ptr_->InBounds(state_.positions[i])) {
+                        // system_.FixMass(i, true);
+                        // state_.velocities[i] = glm::vec3(0.f);
+                        state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
+                    }
+                    if (display_vertices_) {
+                        sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
+                    }
+                }
+
+                // update radial springs
+                for (size_t i = 1; i < state_.positions.size(); i++) {
+                    if (system_.GetMass(i)[1]/*is_fixed*/) {
+                        float spring_length = glm::length(state_.positions[1] - state_.positions[0]);
                         float eps = 0.01;
-                        if (OutOfBounds(state_.positions[i], lower, eps)) {
-                            // system_.FixMass(i, true);
-                            // state_.velocities[i] = glm::vec3(0.f);
-                            glm::vec3 p = state_.positions[i];
-                            glm::vec3 v = state_.velocities[i];
-                            // state_.positions[i] = glm::vec3(p.x, lower, p.z);
-                            state_.velocities[i] = glm::vec3(v.x, 0.f, v.z);
-                        }
-                        if (display_vertices_) {
-                            sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
+                        if (spring_length > system_.GetSpring(i)[3]/*rest_length*/ + eps) {
+                            system_.FixMass(i, false);
                         }
                     }
-
-                    // update radial springs
-                    for (size_t i = 1; i < state_.positions.size(); i++) {
-                        if (system_.GetMass(i)[1]/*is_fixed*/) {
-                            float spring_length = glm::length(state_.positions[1] - state_.positions[0]);
-                            float eps = 0.01;
-                            if (spring_length > system_.GetSpring(i)[3]/*rest_length*/ + eps) {
-                                system_.FixMass(i, false);
-                            }
-                        }
-                        if (display_radii_) {
-                            auto line = radial_line_ptrs_[i - 1];
-                            auto line_positions = make_unique<PositionArray>();
-                            auto line_indices = make_unique<IndexArray>();
-                            line_positions->push_back(state_.positions[0]);
-                            line_positions->push_back(state_.positions[i]);
-                            line_indices->push_back(0);
-                            line_indices->push_back(1);
-                            line->UpdatePositions(std::move(line_positions));
-                            line->UpdateIndices(std::move(line_indices));
-                        }
+                    if (display_radii_) {
+                        auto line = radial_line_ptrs_[i - 1];
+                        auto line_positions = make_unique<PositionArray>();
+                        auto line_indices = make_unique<IndexArray>();
+                        line_positions->push_back(state_.positions[0]);
+                        line_positions->push_back(state_.positions[i]);
+                        line_indices->push_back(0);
+                        line_indices->push_back(1);
+                        line->UpdatePositions(std::move(line_positions));
+                        line->UpdateIndices(std::move(line_indices));
                     }
+                }
 
-                    // update surface springs
-                    if (display_mesh_) {
-                        for (size_t i = 0; i < triangles_.size(); i++) {
-                            auto line = surface_line_ptrs_[i];
-                            auto line_positions = make_unique<PositionArray>();
-                            auto line_indices = make_unique<IndexArray>();
-                            line_positions->push_back(state_.positions[triangles_[i][0]]);
-                            line_positions->push_back(state_.positions[triangles_[i][1]]);
-                            line_positions->push_back(state_.positions[triangles_[i][2]]);
-                            line_indices->push_back(0);
-                            line_indices->push_back(1);
-                            line_indices->push_back(1);
-                            line_indices->push_back(2);
-                            line_indices->push_back(2);
-                            line_indices->push_back(0);
-                            line->UpdatePositions(std::move(line_positions));
-                            line->UpdateIndices(std::move(line_indices));
-                        }
+                // update surface springs
+                if (display_mesh_) {
+                    for (size_t i = 0; i < triangles_.size(); i++) {
+                        auto line = surface_line_ptrs_[i];
+                        auto line_positions = make_unique<PositionArray>();
+                        auto line_indices = make_unique<IndexArray>();
+                        line_positions->push_back(state_.positions[triangles_[i][0]]);
+                        line_positions->push_back(state_.positions[triangles_[i][1]]);
+                        line_positions->push_back(state_.positions[triangles_[i][2]]);
+                        line_indices->push_back(0);
+                        line_indices->push_back(1);
+                        line_indices->push_back(1);
+                        line_indices->push_back(2);
+                        line_indices->push_back(2);
+                        line_indices->push_back(0);
+                        line->UpdatePositions(std::move(line_positions));
+                        line->UpdateIndices(std::move(line_indices));
                     }
+                }
 
-                    // update normals
-                    if (display_surface_) {
-                        auto normal_positions = make_unique<PositionArray>();
-                        for (int i = 0; i < state_.positions.size(); i++) { 
-                            normal_positions->push_back(state_.positions[i]);
-                        }
-                        normal_mesh_->UpdatePositions(std::move(normal_positions));
-
-                        auto normal_indicies = make_unique<IndexArray>();
-                        for (glm::vec3 triangle : triangles_) { 
-                            normal_indicies->push_back(triangle[0]);
-                            normal_indicies->push_back(triangle[1]);
-                            normal_indicies->push_back(triangle[2]);
-                        }
-                        normal_mesh_->UpdateIndices(std::move(normal_indicies));
-
-                        std::vector<glm::vec3> normal_sums; 
-                        for (int i = 0; i < state_.positions.size(); i++) {
-                            normal_sums.push_back(glm::vec3(0.f));
-                        }
-                        for (glm::vec3 triangle : triangles_) { 
-                            int idx1 = triangle[0];
-                            int idx2 = triangle[1];
-                            int idx3 = triangle[2];
-                            glm::vec3 v1 = state_.positions[idx2] - state_.positions[idx1];
-                            glm::vec3 v2 = state_.positions[idx3] - state_.positions[idx1];
-                            glm::vec3 normal = glm::cross(v1, v2);
-                            normal_sums[idx1] += normal;
-                            normal_sums[idx2] += normal;
-                            normal_sums[idx3] += normal;
-                        }
-                        auto normals = make_unique<NormalArray>();
-                        for (int i = 0; i < normal_sums.size(); i ++) {
-                            normals->push_back(glm::normalize(normal_sums[i])); 
-                        }
-                        normal_mesh_->UpdateNormals(std::move(normals));
+                // update normals
+                if (display_surface_) {
+                    auto normal_positions = make_unique<PositionArray>();
+                    for (int i = 0; i < state_.positions.size(); i++) { 
+                        normal_positions->push_back(state_.positions[i]);
                     }
+                    normal_mesh_->UpdatePositions(std::move(normal_positions));
+
+                    auto normal_indicies = make_unique<IndexArray>();
+                    for (glm::vec3 triangle : triangles_) { 
+                        normal_indicies->push_back(triangle[0]);
+                        normal_indicies->push_back(triangle[1]);
+                        normal_indicies->push_back(triangle[2]);
+                    }
+                    normal_mesh_->UpdateIndices(std::move(normal_indicies));
+
+                    std::vector<glm::vec3> normal_sums; 
+                    for (int i = 0; i < state_.positions.size(); i++) {
+                        normal_sums.push_back(glm::vec3(0.f));
+                    }
+                    for (glm::vec3 triangle : triangles_) { 
+                        int idx1 = triangle[0];
+                        int idx2 = triangle[1];
+                        int idx3 = triangle[2];
+                        glm::vec3 v1 = state_.positions[idx2] - state_.positions[idx1];
+                        glm::vec3 v2 = state_.positions[idx3] - state_.positions[idx1];
+                        glm::vec3 normal = glm::cross(v1, v2);
+                        normal_sums[idx1] += normal;
+                        normal_sums[idx2] += normal;
+                        normal_sums[idx3] += normal;
+                    }
+                    auto normals = make_unique<NormalArray>();
+                    for (int i = 0; i < normal_sums.size(); i ++) {
+                        normals->push_back(glm::normalize(normal_sums[i])); 
+                    }
+                    normal_mesh_->UpdateNormals(std::move(normals));
+                }
 
                     start_time += step_size_;
                 }
@@ -240,13 +257,25 @@ namespace GLOO {
             if (InputManager::GetInstance().IsKeyPressed('R')) {
                 if (prev_released) {
                     drop_ball_ = false;
-                    // state_ = { positions_, velocities_ };
+                    state_ = { positions_, velocities_ };
                 }
                 prev_released = false;
             }
             else {
                 prev_released = true;
             }
+        }
+
+
+        // GUI Functions
+        void LinkControl(float* &height, float* &x, float* &z) {
+            linked_height_ = height;
+            linked_x_ = x;
+            linked_z_ = z;
+        }
+        void OnParamsChanged() {
+            start_center_ = glm::vec3(*linked_x_, *linked_height_, *linked_z_);
+            Reset();
         }
 
 
@@ -266,38 +295,17 @@ namespace GLOO {
             }
         }
         void SubdivideToIcosphere() {
-            // http://www.songho.ca/opengl/gl_sphere.html
-            //         v0       
-            //        / \       
-            //    v3 *---* v5
-            //      / \ / \     
-            //    v1---*---v2   
-            //         v4     
-            for (int n = 0; n < subdivisions_ - surface_layers_ + 1; n++) { // final icosphere only includes last layer of this loop
-                std::vector<glm::vec3> temp_triangles;
+            for (int n = 0; n < subdivisions_; n++) {
+                std::vector<glm::vec3> new_triangles; // 1 original triangle --> 4 new triangles
                 for (glm::vec3 triangle : triangles_) {
-                    // original vertices
-                    int i0 = triangle[0];
-                    int i1 = triangle[1];
-                    int i2 = triangle[2];
+                    // http://www.songho.ca/opengl/gl_sphere.html
+                    //         v0       
+                    //        / \       
+                    //    v3 *---* v5
+                    //      / \ / \     
+                    //    v1---*---v2   
+                    //         v4     
 
-                    // new vertices
-                    int i3 = AddMidpoint(i0, i1, vertex_mass_, vertex_fixed_);
-                    int i4 = AddMidpoint(i1, i2, vertex_mass_, vertex_fixed_);
-                    int i5 = AddMidpoint(i2, i0, vertex_mass_, vertex_fixed_);
-
-                    // new faces
-                    temp_triangles.push_back(glm::vec3(i0, i3, i5));
-                    temp_triangles.push_back(glm::vec3(i3, i1, i4));
-                    temp_triangles.push_back(glm::vec3(i5, i4, i2));
-                    temp_triangles.push_back(glm::vec3(i3, i4, i5));
-                }
-                midpt_cache_.clear();
-                triangles_ = temp_triangles;
-            }
-            std::vector<glm::vec3> new_triangles = triangles_; // if surface_layers == subdivisions_ + 1, then this is original triangles_ (otherwise, comes from previous loop)
-            for (int n = subdivisions_ - surface_layers_ + 1; n < subdivisions_; n++) {
-                for (glm::vec3 triangle : triangles_) {
                     // original vertices
                     int i0 = triangle[0];
                     int i1 = triangle[1];
@@ -491,6 +499,12 @@ namespace GLOO {
 
         // UI Controls
         bool drop_ball_;
+        float* linked_height_;
+        float* linked_x_;
+        float* linked_z_;
+
+        // other objects
+        GroundNode* ground_ptr_;
     };
 } // namespace GLOO
 
