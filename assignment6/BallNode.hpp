@@ -142,7 +142,8 @@ namespace GLOO {
                         if (OutOfBounds(state_.positions[i], lower, eps)) {
                             // system_.FixMass(i, true);
                             // state_.velocities[i] = glm::vec3(0.f);
-                            state_.velocities[i] = glm::vec3(0.f, 1.f, 0.f);
+                            glm::vec3 v = state_.velocities[i];
+                            state_.velocities[i] = glm::vec3(v.x, 0.f, v.z);
                         }
                         if (display_vertices_) {
                             sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
@@ -404,8 +405,8 @@ namespace GLOO {
         float step_size_;
 
         // DISPLAY TOGGLES 
-        bool display_vertices_ = true;
-        bool display_radii_ = true;
+        bool display_vertices_ = false;
+        bool display_radii_ = false;
         bool display_mesh_ = true;
         bool display_surface_ = false;
 
