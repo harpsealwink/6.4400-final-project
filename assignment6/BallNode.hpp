@@ -142,8 +142,10 @@ namespace GLOO {
                         if (OutOfBounds(state_.positions[i], lower, eps)) {
                             // system_.FixMass(i, true);
                             // state_.velocities[i] = glm::vec3(0.f);
+                            glm::vec3 p = state_.positions[i];
                             glm::vec3 v = state_.velocities[i];
-                            state_.velocities[i] = glm::vec3(v.x, 0.f, v.z);
+                            state_.positions[i] = glm::vec3(p.x, lower, p.z);
+                            state_.velocities[i] = glm::vec3(v.x, 5.f, v.z);
                         }
                         if (display_vertices_) {
                             sphere_node_ptrs_[i]->GetTransform().SetPosition(state_.positions[i]);
@@ -230,7 +232,6 @@ namespace GLOO {
                         normal_mesh_->UpdateNormals(std::move(normals));
                     }
 
-
                     start_time += step_size_;
                 }
             }
@@ -265,17 +266,38 @@ namespace GLOO {
             }
         }
         void SubdivideToIcosphere() {
-            for (int n = 0; n < subdivisions_; n++) {
-                std::vector<glm::vec3> new_triangles; // 1 original triangle --> 4 new triangles
+            // http://www.songho.ca/opengl/gl_sphere.html
+            //         v0       
+            //        / \       
+            //    v3 *---* v5
+            //      / \ / \     
+            //    v1---*---v2   
+            //         v4     
+            for (int n = 0; n < subdivisions_ - surface_layers_ + 1; n++) { // final icosphere only includes last layer of this loop
+                std::vector<glm::vec3> temp_triangles;
                 for (glm::vec3 triangle : triangles_) {
-                    // http://www.songho.ca/opengl/gl_sphere.html
-                    //         v0       
-                    //        / \       
-                    //    v3 *---* v5
-                    //      / \ / \     
-                    //    v1---*---v2   
-                    //         v4     
+                    // original vertices
+                    int i0 = triangle[0];
+                    int i1 = triangle[1];
+                    int i2 = triangle[2];
 
+                    // new vertices
+                    int i3 = AddMidpoint(i0, i1, vertex_mass_, vertex_fixed_);
+                    int i4 = AddMidpoint(i1, i2, vertex_mass_, vertex_fixed_);
+                    int i5 = AddMidpoint(i2, i0, vertex_mass_, vertex_fixed_);
+
+                    // new faces
+                    temp_triangles.push_back(glm::vec3(i0, i3, i5));
+                    temp_triangles.push_back(glm::vec3(i3, i1, i4));
+                    temp_triangles.push_back(glm::vec3(i5, i4, i2));
+                    temp_triangles.push_back(glm::vec3(i3, i4, i5));
+                }
+                midpt_cache_.clear();
+                triangles_ = temp_triangles;
+            }
+            std::vector<glm::vec3> new_triangles = triangles_; // if surface_layers == subdivisions_ + 1, then this is original triangles_ (otherwise, comes from previous loop)
+            for (int n = subdivisions_ - surface_layers_ + 1; n < subdivisions_; n++) {
+                for (glm::vec3 triangle : triangles_) {
                     // original vertices
                     int i0 = triangle[0];
                     int i1 = triangle[1];
@@ -417,11 +439,12 @@ namespace GLOO {
         bool center_fixed_ = false;
         bool vertex_fixed_ = false;
         const float scale_ = 0.2;
-        const int subdivisions_ = 1;
+        const int subdivisions_ = 2;
+        const int surface_layers_ = 3; // must have 1 <= surface_layers_ <= subdivisions_ + 1
         const float center_mass_ = 0.3; 
-        const float vertex_mass_ = 0.01; 
-        const float surface_k_ = 30.f;
-        const float radial_k_ = 100.f; 
+        const float vertex_mass_ = 1.f; 
+        const float surface_k_ = 5.f;
+        const float radial_k_ = 20.f; 
         const float radial_l_ = 1.90211 * scale_; // circumradius
         std::unordered_map<int, int> midpt_cache_;
 
