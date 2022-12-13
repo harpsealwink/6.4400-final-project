@@ -43,30 +43,30 @@ namespace GLOO {
             }
 
             // add radial springs
-            for (size_t i = 1; i < positions_.size(); i++) {
-                system_.AddSpring(0, i, radial_l_, radial_k_);
-                if (display_radii_) {
-                    auto line_node = make_unique<SceneNode>();
-                    line_node->CreateComponent<MaterialComponent>(green_material_);
-                    line_node->CreateComponent<ShadingComponent>(line_shader_);
+                for (size_t i = 1; i < positions_.size(); i++) {
+                    system_.AddSpring(0, i, radial_l_, radial_k_);
+                    if (display_radii_) {
+                        auto line_node = make_unique<SceneNode>();
+                        line_node->CreateComponent<MaterialComponent>(green_material_);
+                        line_node->CreateComponent<ShadingComponent>(line_shader_);
 
-                    auto positions = make_unique<PositionArray>();
-                    auto indices = make_unique<IndexArray>();
-                    auto line = std::make_shared<VertexObject>();
-                    positions->push_back(positions_[0]); // center node
-                    positions->push_back(positions_[i]);
-                    indices->push_back(0);
-                    indices->push_back(1);
-                    line->UpdatePositions(std::move(positions));
-                    line->UpdateIndices(std::move(indices));
+                        auto positions = make_unique<PositionArray>();
+                        auto indices = make_unique<IndexArray>();
+                        auto line = std::make_shared<VertexObject>();
+                        positions->push_back(positions_[0]); // center node
+                        positions->push_back(positions_[i]);
+                        indices->push_back(0);
+                        indices->push_back(1);
+                        line->UpdatePositions(std::move(positions));
+                        line->UpdateIndices(std::move(indices));
 
-                    auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
-                    rc_curve.SetDrawMode(DrawMode::Lines);
-                    radial_line_ptrs_.push_back(line);
-                    AddChild(std::move(line_node));
+                        auto& rc_curve = line_node->CreateComponent<RenderingComponent>(line);
+                        rc_curve.SetDrawMode(DrawMode::Lines);
+                        radial_line_ptrs_.push_back(line);
+                        AddChild(std::move(line_node));
+                    }
                 }
-            }
-
+            
             // add surface springs
             for (size_t i = 0; i < triangles_.size(); i++) {
                 int i0 = triangles_[i][0];
@@ -170,26 +170,26 @@ namespace GLOO {
                 }
 
                 // update radial springs
-                for (size_t i = 1; i < state_.positions.size(); i++) {
-                    if (system_.GetMass(i)[1]/*is_fixed*/) {
-                        float spring_length = glm::length(state_.positions[1] - state_.positions[0]);
-                        float eps = 0.01;
-                        if (spring_length > system_.GetSpring(i)[3]/*rest_length*/ + eps) {
-                            system_.FixMass(i, false);
+                    for (size_t i = 1; i < state_.positions.size(); i++) {
+                        if (system_.GetMass(i)[1]/*is_fixed*/) {
+                            float spring_length = glm::length(state_.positions[1] - state_.positions[0]);
+                            float eps = 0.01;
+                            if (spring_length > system_.GetSpring(i)[3]/*rest_length*/ + eps) {
+                                system_.FixMass(i, false);
+                            }
+                        }
+                        if (display_radii_) {
+                            auto line = radial_line_ptrs_[i - 1];
+                            auto line_positions = make_unique<PositionArray>();
+                            auto line_indices = make_unique<IndexArray>();
+                            line_positions->push_back(state_.positions[0]);
+                            line_positions->push_back(state_.positions[i]);
+                            line_indices->push_back(0);
+                            line_indices->push_back(1);
+                            line->UpdatePositions(std::move(line_positions));
+                            line->UpdateIndices(std::move(line_indices));
                         }
                     }
-                    if (display_radii_) {
-                        auto line = radial_line_ptrs_[i - 1];
-                        auto line_positions = make_unique<PositionArray>();
-                        auto line_indices = make_unique<IndexArray>();
-                        line_positions->push_back(state_.positions[0]);
-                        line_positions->push_back(state_.positions[i]);
-                        line_indices->push_back(0);
-                        line_indices->push_back(1);
-                        line->UpdatePositions(std::move(line_positions));
-                        line->UpdateIndices(std::move(line_indices));
-                    }
-                }
 
                 // update surface springs
                 if (display_mesh_) {
@@ -325,6 +325,7 @@ namespace GLOO {
                 midpt_cache_.clear();
                 triangles_ = new_triangles;
             }
+                system_.SetTriangles(triangles_);
         }
         void AddVertex(glm::vec3 position, float mass, bool fixed) {
             positions_.push_back(position);

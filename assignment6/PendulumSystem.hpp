@@ -70,9 +70,14 @@ class PendulumSystem : public ParticleSystemBase {
             return springs_[i];
         }
 
+        void SetTriangles(std::vector<glm::vec3> triangles) {
+            triangles_ = triangles;
+        }
+
         std::vector<glm::vec4> springs_;
         std::vector<bool> fixed_; // for each index i, true if particle i is fixed, else false
         std::vector<float> masses_; // for each index i, contains particle i's mass
+        std::vector<glm::vec3> triangles_;
 };
 }  // namespace GLOO
 
