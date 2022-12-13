@@ -28,8 +28,6 @@ namespace GLOO {
             // initialize icosphere
             InitIcosahedron();
             SubdivideToIcosphere();
-            normal_mesh_ = std::make_shared<VertexObject>();
-            ComputeNormals();
 
             // render vertices
             if (display_vertices_) {
@@ -39,7 +37,7 @@ namespace GLOO {
                     sphere_node->CreateComponent<ShadingComponent>(shader_);
                     sphere_node->CreateComponent<RenderingComponent>(sphere_mesh_);
                     sphere_node_ptrs_.push_back(sphere_node.get());
-                        AddChild(std::move(sphere_node));
+                    AddChild(std::move(sphere_node));
                 }
             }
 
@@ -105,6 +103,17 @@ namespace GLOO {
                     surface_line_ptrs_.push_back(line);
                     AddChild(std::move(line_node));
                 }
+            }
+
+            // render surface
+            if (display_surface_) {
+                ComputeNormals();
+                auto surface_node = make_unique<SceneNode>();
+                surface_node->CreateComponent<ShadingComponent>(shader_);
+                surface_node->CreateComponent<MaterialComponent>(white_material_);
+                surface_node->CreateComponent<RenderingComponent>(normal_mesh_);
+                //mesh_node_ = surface_node.get();
+                AddChild(std::move(surface_node));
             }
 
             state_ = { positions_, velocities_ };
@@ -281,10 +290,10 @@ namespace GLOO {
                     int i5 = AddMidpoint(i2, i0, vertex_mass_, vertex_fixed_);
 
                     // new faces
-                    new_triangles.push_back(glm::vec3(i0, i5, i3));
-                    new_triangles.push_back(glm::vec3(i3, i4, i1));
-                    new_triangles.push_back(glm::vec3(i5, i2, i4));
-                    new_triangles.push_back(glm::vec3(i3, i5, i4));
+                    new_triangles.push_back(glm::vec3(i0, i3, i5));
+                    new_triangles.push_back(glm::vec3(i3, i1, i4));
+                    new_triangles.push_back(glm::vec3(i5, i4, i2));
+                    new_triangles.push_back(glm::vec3(i3, i4, i5));
                 }
                 midpt_cache_.clear();
                 triangles_ = new_triangles;
@@ -318,33 +327,33 @@ namespace GLOO {
         }
         void ComputeNormals() { // add surface normals to sphere  
             auto normal_positions = make_unique<PositionArray>();
-            for (int i = 0; i < positions_.size(); i++) { // load in all positions for PositionArray
-                normal_positions->push_back(positions_[i]);
-            }
-            normal_mesh_->UpdatePositions(std::move(normal_positions));
-
             auto normal_indicies = make_unique<IndexArray>();
-            for (glm::vec3 triangle : triangles_) { // load in all triangle indicies for IndexArray
+            std::vector<glm::vec3> normal_sums;
+            auto normals = make_unique<NormalArray>();
+
+            for (int i = 0; i < positions_.size(); i++) {
+                normal_positions->push_back(positions_[i]); // load in all positions
+                normal_sums.push_back(glm::vec3(0.f)); // initialize normals array
+            }
+            for (glm::vec3 triangle : triangles_) {
+                // load in all triangle indicies
                 normal_indicies->push_back(triangle[0]);
                 normal_indicies->push_back(triangle[1]);
                 normal_indicies->push_back(triangle[2]);
-            }
-            normal_mesh_->UpdateIndices(std::move(normal_indicies));
 
-            std::vector<glm::vec3> normal_sums; // initialize normals array
-            for (int i = 0; i < positions_.size(); i++) {
-                normal_sums.push_back(glm::vec3(0.f));
-            }
-            for (glm::vec3 triangle : triangles_) { // add to each vertex normal the normals of incident faces
+                // add the normals of incident faces to each vertex normal
+                int idx1 = triangle[0];
                 int idx2 = triangle[1];
-                int idx1, idx3;
+                int idx3 = triangle[2]; // (I think I fixed the underlying issue -grace)
+                /*int idx1, idx3;
                 if (subdivisions_ % 2 == 0) {
                     idx1 = triangle[0];
                     idx3 = triangle[2];
-                } else {
+                }
+                else {
                     idx1 = triangle[2];
                     idx3 = triangle[0];
-                }
+                }*/
                 glm::vec3 v1 = positions_[idx2] - positions_[idx1];
                 glm::vec3 v2 = positions_[idx3] - positions_[idx1];
                 glm::vec3 normal = glm::cross(v1, v2);
@@ -352,19 +361,13 @@ namespace GLOO {
                 normal_sums[idx2] += normal;
                 normal_sums[idx3] += normal;
             }
-            auto normals = make_unique<NormalArray>();
             for (int i = 0; i < normal_sums.size(); i++) {
                 normals->push_back(glm::normalize(normal_sums[i])); // normalize the sum of normals for vertex
             }
-            normal_mesh_->UpdateNormals(std::move(normals));
 
-            // render normals
-            auto surface_node = make_unique<SceneNode>();
-            surface_node->CreateComponent<ShadingComponent>(shader_);
-            surface_node->CreateComponent<MaterialComponent>(white_material_);
-            surface_node->CreateComponent<RenderingComponent>(normal_mesh_);
-            mesh_node_ = surface_node.get();
-            AddChild(std::move(surface_node));
+            normal_mesh_->UpdatePositions(std::move(normal_positions));
+            normal_mesh_->UpdateIndices(std::move(normal_indicies));
+            normal_mesh_->UpdateNormals(std::move(normals));
         }
 
         bool OutOfBounds(glm::vec3 position, float lower, float eps) {
@@ -390,34 +393,35 @@ namespace GLOO {
             glm::vec3(0.f, 0.f, 1.f),
             glm::vec3(0.f, 0.f, 1.f), 20.0f);
         std::shared_ptr<Material> white_material_ = std::make_shared<Material>(
-            glm::vec3(1.f, 0.8f, 1.f), 
-            glm::vec3(1.f, 0.8f, 1.f), 
-            glm::vec3(0.2f, 0.2f, 0.2f), 20.0f); 
+            glm::vec3(1.f, 0.8f, 1.f),
+            glm::vec3(1.f, 0.8f, 1.f),
+            glm::vec3(0.2f, 0.2f, 0.2f), 20.0f);
         std::shared_ptr<SimpleShader> line_shader_ = std::make_shared<SimpleShader>();
         std::shared_ptr<PhongShader> shader_ = std::make_shared<PhongShader>();
         std::shared_ptr<VertexObject> sphere_mesh_ = PrimitiveFactory::CreateSphere(0.03f, 25, 25);
+        std::shared_ptr<VertexObject> normal_mesh_ = std::make_shared<VertexObject>();
 
         // SCENENODE POINTERS
         std::vector<SceneNode*> sphere_node_ptrs_;
         //std::vector<SceneNode*> line_node_ptrs_;
         std::vector<std::shared_ptr<VertexObject>> surface_line_ptrs_;
         std::vector<std::shared_ptr<VertexObject>> radial_line_ptrs_;
-        SceneNode* mesh_node_;
+        //SceneNode* mesh_node_;
 
         // SIMULATION INFO
         std::vector<glm::vec3> positions_;
         std::vector<glm::vec3> velocities_;
         std::vector<glm::vec3> triangles_;
-        std::shared_ptr<VertexObject> normal_mesh_;
         ParticleState state_;
         PendulumSystem system_;
         std::unique_ptr<IntegratorBase<PendulumSystem, ParticleState>> integrator_;
         float step_size_;
 
         // DISPLAY TOGGLES 
-        bool display_vertices_ = false;
-        bool display_radii_ = false;
-        bool display_mesh_ = false;
+        bool display_vertices_ = true;
+        bool display_radii_ = true;
+        bool display_mesh_ = true;
+        bool display_surface_ = true;
 
         // ICOSPHERE PARAMS
         glm::vec3 start_center_ = glm::vec3(0.f, 1.f, 0.f);
@@ -427,9 +431,9 @@ namespace GLOO {
         const float scale_ = 0.2;
         const int subdivisions_ = 1;
         const float center_mass_ = 3.0; // 0.1, 3.0
-        const float vertex_mass_ = 0.05; // 0.1, 0.05
-        const float surface_k_ = 300.f; // 100, 300
-        const float radial_k_ = 1000.f; // 50, 1000
+        const float vertex_mass_ = 0.5; // 0.1, 0.05
+        const float surface_k_ = 30.f; // 100, 300
+        const float radial_k_ = 10.f; // 50, 1000
         const float radial_l_ = 1.90211 * scale_; // circumradius
         std::unordered_map<int, int> midpt_cache_;
 
